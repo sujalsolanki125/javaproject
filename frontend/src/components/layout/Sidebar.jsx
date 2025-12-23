@@ -6,6 +6,7 @@ export default function Sidebar() {
   const navItems = [
     { path: '/dashboard', icon: 'monitoring', label: 'Dashboard' },
     { path: '/survey', icon: 'assignment', label: 'Survey' },
+    { path: '/logs', icon: 'timeline', label: 'Logs' },
     { path: '/goals', icon: 'emoji_events', label: 'Goals' },
     { path: '/marketplace', icon: 'storefront', label: 'Marketplace' }
   ];

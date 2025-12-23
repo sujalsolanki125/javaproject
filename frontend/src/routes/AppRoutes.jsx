@@ -30,6 +30,11 @@ export default function AppRoutes() {
             <SurveyForm />
           </PrivateRoute>
         } />
+        <Route path="/logs" element={
+          <PrivateRoute>
+            <CarbonLogs />
+          </PrivateRoute>
+        } />
         <Route path="/marketplace" element={
           <PrivateRoute>
             <Marketplace />
