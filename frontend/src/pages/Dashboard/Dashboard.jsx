@@ -1,34 +1,103 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import DashboardHeader from '../../components/layout/DashboardHeader';
 import AnalyticsCard from './AnalyticsCard';
+import carbonService from '../../services/carbon.service';
 
 export default function Dashboard() {
+  const location = useLocation();
   const [timeRange, setTimeRange] = useState('month');
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
   const [dashboardData, setDashboardData] = useState({
-    todayEmissions: { value: 5.2, change: '+5%', trend: 'up', comparison: 'vs yesterday' },
-    weeklyTrend: { value: 38.5, change: '-15%', trend: 'down', comparison: 'vs last week' },
-    monthlyTotal: { value: 162.1, change: 'On track', trend: 'neutral', comparison: 'for goal' },
+    todayEmissions: { value: 0, change: '+0%', trend: 'neutral', comparison: 'vs yesterday' },
+    weeklyTrend: { value: 0, change: '0%', trend: 'neutral', comparison: 'vs last week' },
+    monthlyTotal: { value: 0, change: 'On track', trend: 'neutral', comparison: 'for goal' },
     categories: [
-      { name: 'Transport', value: 45.2, icon: 'directions_car', color: 'blue' },
-      { name: 'Food', value: 67.8, icon: 'restaurant', color: 'orange' },
-      { name: 'Energy', value: 31.1, icon: 'bolt', color: 'yellow' },
-      { name: 'Other', value: 18.0, icon: 'more_horiz', color: 'purple' }
+      { name: 'Transport', value: 0, icon: 'directions_car', color: 'blue' },
+      { name: 'Food', value: 0, icon: 'restaurant', color: 'orange' },
+      { name: 'Energy', value: 0, icon: 'bolt', color: 'yellow' },
+      { name: 'Other', value: 0, icon: 'more_horiz', color: 'purple' }
     ],
-    goals: [
-      { title: 'Reduce transport by 10%', progress: 65 },
-      { title: '3 Meatless Days a Week', progress: 80 },
-      { title: 'Lower Energy Use', progress: 40 }
-    ],
-    badges: [
-      { name: 'Eco-Commuter', icon: 'military_tech', color: 'yellow-500', unlocked: true },
-      { name: 'Meatless Week', icon: 'eco', color: 'green-500', unlocked: true },
-      { name: 'Recycle Pro', icon: 'recycling', color: 'blue-500', unlocked: true },
-      { name: 'Energy Saver', icon: 'lock', color: 'gray-400', unlocked: false },
-      { name: 'Green Shopper', icon: 'lock', color: 'gray-400', unlocked: false },
-      { name: 'First Month', icon: 'lock', color: 'gray-400', unlocked: false }
-    ]
+    goals: [],
+    badges: []
   });
+
+  useEffect(() => {
+    loadDashboardData();
+    
+    // Show message from navigation state (e.g., survey submission)
+    if (location.state?.message) {
+      setMessage(location.state.message);
+      setTimeout(() => setMessage(''), 5000);
+    }
+  }, [location.state]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch dashboard stats from backend
+      const stats = await carbonService.getDashboardStats();
+      
+      if (stats) {
+        setDashboardData({
+          todayEmissions: {
+            value: stats.todayEmissions || 0,
+            change: stats.todayChange || '+0%',
+            trend: stats.todayTrend || 'neutral',
+            comparison: 'vs yesterday'
+          },
+          weeklyTrend: {
+            value: stats.weeklyEmissions || 0,
+            change: stats.weeklyChange || '0%',
+            trend: stats.weeklyTrend || 'neutral',
+            comparison: 'vs last week'
+          },
+          monthlyTotal: {
+            value: stats.monthlyEmissions || 0,
+            change: stats.goalStatus || 'On track',
+            trend: stats.monthlyTrend || 'neutral',
+            comparison: 'for goal'
+          },
+          categories: [
+            { 
+              name: 'Transport', 
+              value: stats.categoryBreakdown?.transportation || 0, 
+              icon: 'directions_car', 
+              color: 'blue' 
+            },
+            { 
+              name: 'Food', 
+              value: stats.categoryBreakdown?.diet || 0, 
+              icon: 'restaurant', 
+              color: 'orange' 
+            },
+            { 
+              name: 'Energy', 
+              value: stats.categoryBreakdown?.energy || 0, 
+              icon: 'bolt', 
+              color: 'yellow' 
+            },
+            { 
+              name: 'Other', 
+              value: stats.categoryBreakdown?.lifestyle || 0, 
+              icon: 'more_horiz', 
+              color: 'purple' 
+            }
+          ],
+          goals: stats.goals || [],
+          badges: stats.badges || []
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      // Keep default/empty state on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full">
@@ -37,8 +106,23 @@ export default function Dashboard() {
       <main className="flex-1 overflow-y-auto bg-background-light">
         <DashboardHeader title="Analytics Dashboard" />
         
+        {/* Success Message from Survey */}
+        {message && (
+          <div className="mx-8 mt-4 rounded-lg bg-primary/10 p-4 text-center text-sm font-medium text-primary">
+            {message}
+          </div>
+        )}
+        
         <div className="flex">
           <div className="flex-1 p-8">
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+                </div>
+              </div>
+            ) : (
             {/* Stats Cards */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <AnalyticsCard
@@ -193,8 +277,7 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            </div>
-          </aside>
+            </div>            )}          </aside>
         </div>
       </main>
     </div>

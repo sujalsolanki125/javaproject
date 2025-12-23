@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import carbonService from '../../services/carbon.service';
 
 export default function SurveyForm() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     // Step 1: Transportation
     transportMode: '',
@@ -54,9 +57,41 @@ export default function SurveyForm() {
   };
 
   const handleSubmit = async () => {
-    // TODO: Integrate with backend API
-    console.log('Survey data:', formData);
-    navigate('/dashboard');
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Calculate carbon footprint
+      const footprintResult = carbonService.calculateFootprint(formData);
+      
+      // Submit survey and create carbon log
+      const logData = {
+        date: new Date().toISOString(),
+        totalEmissions: parseFloat(footprintResult.totalEmissions),
+        breakdown: {
+          transportation: parseFloat(footprintResult.breakdown.transportation),
+          diet: parseFloat(footprintResult.breakdown.diet),
+          energy: parseFloat(footprintResult.breakdown.energy),
+          lifestyle: parseFloat(footprintResult.breakdown.lifestyle)
+        },
+        surveyData: formData
+      };
+      
+      await carbonService.submitSurvey(logData);
+      
+      // Show success message and navigate
+      navigate('/dashboard', { 
+        state: { 
+          message: 'Survey submitted successfully! Your carbon footprint has been calculated.',
+          footprint: footprintResult
+        } 
+      });
+    } catch (err) {
+      setError('Failed to submit survey. Please try again.');
+      console.error('Survey submission error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const stepTitles = {

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
+import userService from '../../services/user.service';
+import carbonService from '../../services/carbon.service';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -17,7 +21,7 @@ export default function Profile() {
     achievementNotifications: false
   });
 
-  const [footprintData] = useState({
+  const [footprintData, setFootprintData] = useState({
     travel: 60,
     energy: 80,
     food: 45,
@@ -25,15 +29,50 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (user) {
+    loadProfileData();
+  }, []);
+
+  const loadProfileData = async () => {
+    try {
+      setLoadingData(true);
+      
+      // Load profile from backend
+      const profile = await userService.getProfile();
       setProfileData(prev => ({
         ...prev,
-        fullName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username,
-        email: user.email || user.username
+        fullName: profile.fullName || '',
+        email: profile.email || '',
+        location: profile.location || '',
+        ageGroup: profile.ageGroup || '25-34',
+        weeklyReports: profile.weeklyReports !== undefined ? profile.weeklyReports : true,
+        achievementNotifications: profile.achievementNotifications || false
       }));
+
+      // Load carbon footprint summary
+      const stats = await carbonService.getDashboardStats();
+      if (stats && stats.categoryBreakdown) {
+        setFootprintData({
+          travel: stats.categoryBreakdown.transportation || 0,
+          energy: stats.categoryBreakdown.energy || 0,
+          food: stats.categoryBreakdown.diet || 0,
+          goods: stats.categoryBreakdown.lifestyle || 0
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load profile data:', err);
+      // Fall back to local user data
+      const user = authService.getCurrentUser();
+      if (user) {
+        setProfileData(prev => ({
+          ...prev,
+          fullName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username,
+          email: user.email || user.username
+        }));
+      }
+    } finally {
+      setLoadingData(false);
     }
-  }, []);
+  };
 
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
@@ -43,15 +82,42 @@ export default function Profile() {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    setError('');
 
     try {
-      // TODO: Integrate with backend API to update profile
-      // await api.put('/api/users/profile', profileData);
+      // Update profile information
+      await userService.updateProfile({
+        fullName: profileData.fullName,
+        location: profileData.location,
+        ageGroup: profileData.ageGroup
+      });
+
+      // Update notification preferences
+      await userService.updateNotificationPreferences({
+        weeklyReports: profileData.weeklyReports,
+        achievementNotifications: profileData.achievementNotifications
+      });
+
+      // Change password if provided
+      if (profileData.currentPassword && profileData.newPassword) {
+        await userService.changePassword({
+          currentPassword: profileData.currentPassword,
+          newPassword: profileData.newPassword
+        });
+        
+        // Clear password fields after successful change
+        setProfileData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: ''
+        }));
+      }
       
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      setMessage('Failed to update profile. Please try again.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile. Please try again.');
+      setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -159,6 +225,13 @@ export default function Profile() {
               {message && (
                 <div className="rounded-lg bg-primary/10 p-4 text-center text-sm font-medium text-primary">
                   {message}
+                </div>
+              )}
+              
+              {/* Error */}
+              {error && (
+                <div className="rounded-lg bg-red-50 p-4 text-center text-sm font-medium text-red-600">
+                  {error}
                 </div>
               )}
 
