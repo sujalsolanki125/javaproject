@@ -4,6 +4,7 @@ import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import SurveyForm from '../pages/Surveys/SurveyForm';
+import CarbonLogs from '../pages/Logs/CarbonLogs';
 import Marketplace from '../pages/Marketplace/Marketplace';
 import GoalsPage from '../pages/Goals/GoalsPage';
 import Profile from '../pages/Profile/Profile';
