@@ -4,7 +4,7 @@ A full-stack application for tracking and managing carbon footprint with marketp
 
 ## Tech Stack
 
-- **Backend**: Spring Boot (Java)
+- **Backend**: Spring Boot 3.2.0 (Java 21 LTS)
 - **Frontend**: React + Tailwind CSS
 - **Database**: PostgreSQL
 - **Authentication**: JWT
@@ -12,9 +12,15 @@ A full-stack application for tracking and managing carbon footprint with marketp
 ## Getting Started
 
 ### Prerequisites
-- Java 17+
+- Java 21 (LTS)
+- Maven 3.9+
 - Node.js 18+
 - Docker & Docker Compose
+
+### Recent Updates
+- ✅ **December 2025**: Upgraded to Java 21 LTS using OpenRewrite migration tool
+- ✅ All dependencies updated and tested with Java 21
+- ✅ Build and tests passing successfully
 
 ### Running with Docker
 ```bash
