@@ -36,14 +36,14 @@ public class MarketplaceService {
 
     public MarketplaceItem updateItem(Long id, MarketplaceItem itemDetails) {
         MarketplaceItem item = getItemById(id);
-        
+
         item.setName(itemDetails.getName());
         item.setDescription(itemDetails.getDescription());
         item.setCategory(itemDetails.getCategory());
         item.setPrice(itemDetails.getPrice());
         item.setStock(itemDetails.getStock());
         item.setAvailable(itemDetails.getAvailable());
-        
+
         return marketplaceItemRepository.save(item);
     }
 

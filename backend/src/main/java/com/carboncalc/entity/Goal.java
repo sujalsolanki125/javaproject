@@ -15,33 +15,33 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Goal {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
+
     @Column(nullable = false)
     private String title;
-    
+
     private String description;
-    
+
     private Double targetValue;
-    
+
     private Double currentValue = 0.0;
-    
+
     private String category;
-    
+
     private LocalDate startDate;
-    
+
     private LocalDate targetDate;
-    
+
     @Column(nullable = false)
     private String status = "ACTIVE"; // ACTIVE, COMPLETED, FAILED
-    
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

@@ -20,11 +20,11 @@ public class CarbonCalculator {
         EMISSION_FACTORS.put("train", 0.041);
         EMISSION_FACTORS.put("flight_short", 0.255);
         EMISSION_FACTORS.put("flight_long", 0.195);
-        
+
         // Energy (per kWh)
         EMISSION_FACTORS.put("electricity", 0.233);
         EMISSION_FACTORS.put("natural_gas", 0.185);
-        
+
         // Food (per kg)
         EMISSION_FACTORS.put("beef", 27.0);
         EMISSION_FACTORS.put("pork", 12.1);

@@ -14,32 +14,32 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MarketplaceItem {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false)
     private String name;
-    
+
     private String description;
-    
+
     @Column(nullable = false)
     private String category; // carbon_credit, eco_product, service
-    
+
     @Column(nullable = false)
     private Double price;
-    
+
     private String imageUrl;
-    
+
     @Column(nullable = false)
     private Integer stock;
-    
+
     private String seller;
-    
+
     @Column(nullable = false)
     private Boolean available = true;
-    
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

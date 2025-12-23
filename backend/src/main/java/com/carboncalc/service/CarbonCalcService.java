@@ -8,7 +8,7 @@ public class CarbonCalcService {
 
     public Double calculateTotalFootprint(Survey survey) {
         Double total = 0.0;
-        
+
         // Simple calculation - in real app, use detailed formulas
         if (survey.getTransportation() != null) {
             total += calculateTransportationFootprint(survey.getTransportation());
@@ -22,7 +22,7 @@ public class CarbonCalcService {
         if (survey.getConsumption() != null) {
             total += calculateConsumptionFootprint(survey.getConsumption());
         }
-        
+
         return total;
     }
 

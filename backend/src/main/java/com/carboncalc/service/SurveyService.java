@@ -24,13 +24,13 @@ public class SurveyService {
     public Survey createSurvey(Long userId, Survey survey) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         survey.setUser(user);
-        
+
         // Calculate total footprint
         Double totalFootprint = carbonCalcService.calculateTotalFootprint(survey);
         survey.setTotalFootprint(totalFootprint);
-        
+
         return surveyRepository.save(survey);
     }
 

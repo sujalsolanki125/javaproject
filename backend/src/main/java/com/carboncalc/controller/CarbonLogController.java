@@ -30,14 +30,14 @@ public class CarbonLogController {
     public ResponseEntity<CarbonLog> createLog(@RequestBody CarbonLog log, Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         log.setUser(user);
-        
+
         // Calculate carbon emission
         Double emission = carbonCalcService.calculateActivityEmission(
                 log.getCategory(), log.getActivity(), log.getAmount());
         log.setCarbonEmission(emission);
-        
+
         return ResponseEntity.ok(carbonLogRepository.save(log));
     }
 

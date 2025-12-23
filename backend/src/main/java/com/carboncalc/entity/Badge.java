@@ -14,20 +14,20 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Badge {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(unique = true, nullable = false)
     private String name;
-    
+
     private String description;
-    
+
     private String iconUrl;
-    
+
     private String criteria;
-    
+
     @ManyToMany(mappedBy = "badges")
     private Set<User> users = new HashSet<>();
 }

@@ -14,28 +14,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
+
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private MarketplaceItem item;
-    
+
     @Column(nullable = false)
     private Integer quantity;
-    
+
     @Column(nullable = false)
     private Double totalPrice;
-    
+
     @Column(nullable = false)
     private String status; // PENDING, COMPLETED, CANCELLED
-    
+
     @CreationTimestamp
     private LocalDateTime transactionDate;
 }

@@ -14,23 +14,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Leaderboard {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
     private User user;
-    
+
     @Column(nullable = false)
     private Integer rank;
-    
+
     @Column(nullable = false)
     private Integer totalPoints;
-    
+
     private Double totalCarbonSaved;
-    
+
     @UpdateTimestamp
     private LocalDateTime lastUpdated;
 }

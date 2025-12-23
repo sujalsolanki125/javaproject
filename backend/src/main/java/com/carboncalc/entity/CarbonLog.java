@@ -15,30 +15,30 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CarbonLog {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
+
     @Column(nullable = false)
     private String category; // transportation, energy, food, waste
-    
+
     @Column(nullable = false)
     private String activity;
-    
+
     private Double amount;
-    
+
     @Column(nullable = false)
     private Double carbonEmission;
-    
+
     private LocalDate logDate;
-    
+
     private String description;
-    
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }
