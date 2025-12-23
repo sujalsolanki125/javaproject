@@ -11,7 +11,9 @@ export default function SurveyForm() {
     commuteDistance: 50,
     shortHaulFlights: 0,
     longHaulFlights: 0,
-    // Step 2-5 will be added later
+    // Step 2: Diet
+    dietType: 'vegetarian',
+    // Step 3-5 will be added later
   });
 
   const totalSteps = 5;
@@ -46,8 +48,8 @@ export default function SurveyForm() {
 
   const stepTitles = {
     1: 'Transportation',
-    2: 'Energy & Home',
-    3: 'Food & Diet',
+    2: 'Food & Diet',
+    3: 'Energy & Home',
     4: 'Shopping & Consumption',
     5: 'Review & Submit'
   };
@@ -215,8 +217,106 @@ export default function SurveyForm() {
             </>
           )}
 
+          {/* Step 2: Diet Type */}
+          {currentStep === 2 && (
+            <>
+              {/* Page Heading */}
+              <div className="flex flex-col gap-2 text-center">
+                <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
+                  Tell us about your eating habits.
+                </h1>
+                <p className="text-base text-slate-500 dark:text-slate-400">
+                  Select the option that most closely matches your typical diet.
+                </p>
+              </div>
+
+              {/* Radio List with Illustrations */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Vegan Option */}
+                <label className="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 ring-2 ring-transparent transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:ring-primary/20 dark:border-slate-700 dark:bg-slate-800">
+                  <input
+                    type="radio"
+                    name="diet-type"
+                    value="vegan"
+                    checked={formData.dietType === 'vegan'}
+                    onChange={(e) => handleInputChange('dietType', e.target.value)}
+                    className="h-5 w-5 shrink-0 border-2 border-slate-300 bg-transparent text-primary focus:ring-primary dark:border-slate-600 checked:border-primary"
+                  />
+                  <div className="flex grow flex-col">
+                    <p className="text-base font-medium text-slate-900 dark:text-white">Vegan</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No animal products</p>
+                  </div>
+                  <span className="material-symbols-outlined text-4xl text-green-500">eco</span>
+                  <div className="tooltip absolute -top-12 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-3 py-1.5 text-xs text-white opacity-0 invisible transition-opacity group-hover:opacity-100 group-hover:visible">
+                    Plant-based diets typically have the lowest carbon footprint.
+                  </div>
+                </label>
+
+                {/* Vegetarian Option */}
+                <label className="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 ring-2 ring-transparent transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:ring-primary/20 dark:border-slate-700 dark:bg-slate-800">
+                  <input
+                    type="radio"
+                    name="diet-type"
+                    value="vegetarian"
+                    checked={formData.dietType === 'vegetarian'}
+                    onChange={(e) => handleInputChange('dietType', e.target.value)}
+                    className="h-5 w-5 shrink-0 border-2 border-slate-300 bg-transparent text-primary focus:ring-primary dark:border-slate-600 checked:border-primary"
+                  />
+                  <div className="flex grow flex-col">
+                    <p className="text-base font-medium text-slate-900 dark:text-white">Vegetarian</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No meat</p>
+                  </div>
+                  <span className="material-symbols-outlined text-4xl text-lime-500">grass</span>
+                  <div className="tooltip absolute -top-12 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-3 py-1.5 text-xs text-white opacity-0 invisible transition-opacity group-hover:opacity-100 group-hover:visible">
+                    Low carbon impact, excludes meat products.
+                  </div>
+                </label>
+
+                {/* Pescatarian Option */}
+                <label className="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 ring-2 ring-transparent transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:ring-primary/20 dark:border-slate-700 dark:bg-slate-800">
+                  <input
+                    type="radio"
+                    name="diet-type"
+                    value="pescatarian"
+                    checked={formData.dietType === 'pescatarian'}
+                    onChange={(e) => handleInputChange('dietType', e.target.value)}
+                    className="h-5 w-5 shrink-0 border-2 border-slate-300 bg-transparent text-primary focus:ring-primary dark:border-slate-600 checked:border-primary"
+                  />
+                  <div className="flex grow flex-col">
+                    <p className="text-base font-medium text-slate-900 dark:text-white">Pescatarian</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Vegetarian + seafood</p>
+                  </div>
+                  <span className="material-symbols-outlined text-4xl text-blue-400">phishing</span>
+                  <div className="tooltip absolute -top-12 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-3 py-1.5 text-xs text-white opacity-0 invisible transition-opacity group-hover:opacity-100 group-hover:visible">
+                    Lower impact than diets with red meat.
+                  </div>
+                </label>
+
+                {/* Omnivore Option */}
+                <label className="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 ring-2 ring-transparent transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:ring-primary/20 dark:border-slate-700 dark:bg-slate-800">
+                  <input
+                    type="radio"
+                    name="diet-type"
+                    value="omnivore"
+                    checked={formData.dietType === 'omnivore'}
+                    onChange={(e) => handleInputChange('dietType', e.target.value)}
+                    className="h-5 w-5 shrink-0 border-2 border-slate-300 bg-transparent text-primary focus:ring-primary dark:border-slate-600 checked:border-primary"
+                  />
+                  <div className="flex grow flex-col">
+                    <p className="text-base font-medium text-slate-900 dark:text-white">Omnivore</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Plants and animals</p>
+                  </div>
+                  <span className="material-symbols-outlined text-4xl text-amber-500">restaurant</span>
+                  <div className="tooltip absolute -top-12 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-3 py-1.5 text-xs text-white opacity-0 invisible transition-opacity group-hover:opacity-100 group-hover:visible">
+                    Carbon impact varies based on consumption.
+                  </div>
+                </label>
+              </div>
+            </>
+          )}
+
           {/* Future steps placeholder */}
-          {currentStep > 1 && (
+          {currentStep > 2 && (
             <div className="flex flex-col items-center justify-center py-20">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Step {currentStep}: {stepTitles[currentStep]}
