@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Home from '../pages/Home/Home';
 import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
 import Dashboard from '../pages/Dashboard/Dashboard';
@@ -13,6 +14,7 @@ export default function AppRoutes() {
     <Router>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
@@ -43,11 +45,8 @@ export default function AppRoutes() {
           </PrivateRoute>
         } />
         
-        {/* Redirect root to dashboard or login */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
         {/* 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

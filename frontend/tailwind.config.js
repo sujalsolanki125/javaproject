@@ -8,17 +8,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        "primary": "#0df26c",
-        "background-light": "#f5f8f7",
-        "background-dark": "#102217",
+        "primary": "#0df259",
+        "background-light": "#f5f8f6",
+        "background-dark": "#102216",
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]
       },
       borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
+        "DEFAULT": "0.5rem",
+        "lg": "1rem",
+        "xl": "1.5rem",
         "full": "9999px"
       },
     },
