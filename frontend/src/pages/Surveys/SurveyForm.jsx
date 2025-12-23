@@ -20,7 +20,13 @@ export default function SurveyForm() {
     naturalGasUnit: 'therms',
     heatingOilUsage: '',
     heatingOilUnit: 'gallons per year',
-    // Step 4-5 will be added later
+    // Step 4: Habits
+    useReusableBags: false,
+    recycleWaste: true,
+    compostFood: false,
+    unplugElectronics: false,
+    buyLocalProduce: false,
+    // Step 5 will be added later
   });
 
   const totalSteps = 5;
@@ -57,7 +63,7 @@ export default function SurveyForm() {
     1: 'Transportation',
     2: 'Food & Diet',
     3: 'Home Energy',
-    4: 'Waste & Consumption',
+    4: 'Your Habits',
     5: 'Review & Submit'
   };
 
@@ -471,8 +477,136 @@ export default function SurveyForm() {
             </>
           )}
 
+          {/* Step 4: Your Habits */}
+          {currentStep === 4 && (
+            <>
+              {/* Page Heading */}
+              <div className="flex w-full flex-col gap-3 text-center mt-8">
+                <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
+                  Which of these do you do regularly?
+                </h1>
+                <p className="mx-auto max-w-lg text-base text-primary/70 dark:text-primary/80">
+                  Select all the habits that apply to you. This helps us calculate your footprint more accurately.
+                </p>
+              </div>
+
+              {/* Checkbox List */}
+              <div className="mt-6 space-y-2">
+                {/* Reusable Shopping Bags */}
+                <label className="flex items-center gap-x-3 rounded-lg border-2 border-transparent bg-white p-4 transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={formData.useReusableBags}
+                    onChange={(e) => handleInputChange('useReusableBags', e.target.checked)}
+                    className="h-5 w-5 rounded border-2 border-slate-300 bg-transparent text-primary checked:border-primary checked:bg-primary focus:border-primary focus:ring-0 focus:ring-offset-0 dark:border-white/20"
+                  />
+                  <p className="flex-1 text-base text-slate-900 dark:text-white/90">
+                    I use reusable shopping bags
+                  </p>
+                  <div className="group relative">
+                    <span className="material-symbols-outlined cursor-pointer text-slate-400 dark:text-white/40">
+                      help
+                    </span>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-sm text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Using reusable bags reduces plastic waste, which requires energy to produce and transport, lowering your carbon footprint.
+                      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-slate-900"></div>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Recycle Waste */}
+                <label className="flex items-center gap-x-3 rounded-lg border-2 border-transparent bg-white p-4 transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={formData.recycleWaste}
+                    onChange={(e) => handleInputChange('recycleWaste', e.target.checked)}
+                    className="h-5 w-5 rounded border-2 border-slate-300 bg-transparent text-primary checked:border-primary checked:bg-primary focus:border-primary focus:ring-0 focus:ring-offset-0 dark:border-white/20"
+                  />
+                  <p className="flex-1 text-base text-slate-900 dark:text-white/90">
+                    I recycle paper, glass, and plastic
+                  </p>
+                  <div className="group relative">
+                    <span className="material-symbols-outlined cursor-pointer text-slate-400 dark:text-white/40">
+                      help
+                    </span>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-sm text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Recycling conserves energy and natural resources, reducing greenhouse gas emissions from manufacturing new materials.
+                      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-slate-900"></div>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Compost Food */}
+                <label className="flex items-center gap-x-3 rounded-lg border-2 border-transparent bg-white p-4 transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={formData.compostFood}
+                    onChange={(e) => handleInputChange('compostFood', e.target.checked)}
+                    className="h-5 w-5 rounded border-2 border-slate-300 bg-transparent text-primary checked:border-primary checked:bg-primary focus:border-primary focus:ring-0 focus:ring-offset-0 dark:border-white/20"
+                  />
+                  <p className="flex-1 text-base text-slate-900 dark:text-white/90">
+                    I compost my food scraps
+                  </p>
+                  <div className="group relative">
+                    <span className="material-symbols-outlined cursor-pointer text-slate-400 dark:text-white/40">
+                      help
+                    </span>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-sm text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Composting diverts organic waste from landfills, where it would produce methane, a potent greenhouse gas.
+                      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-slate-900"></div>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Unplug Electronics */}
+                <label className="flex items-center gap-x-3 rounded-lg border-2 border-transparent bg-white p-4 transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={formData.unplugElectronics}
+                    onChange={(e) => handleInputChange('unplugElectronics', e.target.checked)}
+                    className="h-5 w-5 rounded border-2 border-slate-300 bg-transparent text-primary checked:border-primary checked:bg-primary focus:border-primary focus:ring-0 focus:ring-offset-0 dark:border-white/20"
+                  />
+                  <p className="flex-1 text-base text-slate-900 dark:text-white/90">
+                    I unplug electronics when not in use
+                  </p>
+                  <div className="group relative">
+                    <span className="material-symbols-outlined cursor-pointer text-slate-400 dark:text-white/40">
+                      help
+                    </span>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-sm text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Many electronics draw "phantom" power even when off. Unplugging them saves energy and reduces your electricity-related emissions.
+                      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-slate-900"></div>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Buy Local Produce */}
+                <label className="flex items-center gap-x-3 rounded-lg border-2 border-transparent bg-white p-4 transition-colors duration-200 has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={formData.buyLocalProduce}
+                    onChange={(e) => handleInputChange('buyLocalProduce', e.target.checked)}
+                    className="h-5 w-5 rounded border-2 border-slate-300 bg-transparent text-primary checked:border-primary checked:bg-primary focus:border-primary focus:ring-0 focus:ring-offset-0 dark:border-white/20"
+                  />
+                  <p className="flex-1 text-base text-slate-900 dark:text-white/90">
+                    I buy local produce when possible
+                  </p>
+                  <div className="group relative">
+                    <span className="material-symbols-outlined cursor-pointer text-slate-400 dark:text-white/40">
+                      help
+                    </span>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-sm text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Buying local reduces "food miles"—the distance food travels from farm to plate—which cuts down on transportation emissions.
+                      <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-slate-900"></div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </>
+          )}
+
           {/* Future steps placeholder */}
-          {currentStep > 3 && (
+          {currentStep > 4 && (
             <div className="flex flex-col items-center justify-center py-20">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Step {currentStep}: {stepTitles[currentStep]}
