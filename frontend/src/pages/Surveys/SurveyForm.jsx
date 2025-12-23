@@ -605,8 +605,212 @@ export default function SurveyForm() {
             </>
           )}
 
+          {/* Step 5: Final Review */}
+          {currentStep === 5 && (
+            <>
+              {/* Page Heading */}
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
+                    Survey - Final Review
+                  </h1>
+                  <p className="text-base text-slate-600 dark:text-slate-400">
+                    One last look before we calculate your carbon footprint.
+                  </p>
+                </div>
+              </div>
+
+              {/* Accordions */}
+              <div className="flex flex-col gap-3">
+                {/* Home & Energy Accordion */}
+                <details className="group flex flex-col rounded-xl border border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-background-dark" open>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-900 dark:text-white">home</span>
+                      <p className="text-base font-medium text-slate-900 dark:text-white">Home &amp; Energy</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setCurrentStep(3); }}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <span className="material-symbols-outlined text-slate-900 transition-transform duration-200 group-open:rotate-180 dark:text-white">
+                        expand_more
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="pb-4">
+                    <div className="grid grid-cols-1 gap-x-4 border-t border-slate-200 dark:border-slate-800 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1 py-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Electricity Usage</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.electricityUsage || 'Not specified'} {formData.electricityUnit}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800 sm:border-l sm:border-t-0 sm:pl-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Natural Gas Usage</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.naturalGasUsage || 'Not specified'} {formData.naturalGasUnit}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Heating Oil Usage</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.heatingOilUsage || 'Not specified'} {formData.heatingOilUnit}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                {/* Travel Accordion */}
+                <details className="group flex flex-col rounded-xl border border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-background-dark">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-900 dark:text-white">directions_car</span>
+                      <p className="text-base font-medium text-slate-900 dark:text-white">Travel</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setCurrentStep(1); }}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <span className="material-symbols-outlined text-slate-900 transition-transform duration-200 group-open:rotate-180 dark:text-white">
+                        expand_more
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="pb-4">
+                    <div className="grid grid-cols-1 gap-x-4 border-t border-slate-200 dark:border-slate-800 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1 py-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Primary mode of transport</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.transportMode ? formData.transportMode.charAt(0).toUpperCase() + formData.transportMode.slice(1) : 'Not specified'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800 sm:border-l sm:border-t-0 sm:pl-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Commute Frequency</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.commuteFrequency || 'Not specified'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Weekly Commute Distance</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.commuteDistance} km
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800 sm:border-l sm:pl-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Annual flights (short-haul)</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.shortHaulFlights} flights
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 border-t border-slate-200 py-4 dark:border-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Annual flights (long-haul)</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.longHaulFlights} flights
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                {/* Diet Accordion */}
+                <details className="group flex flex-col rounded-xl border border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-background-dark">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-900 dark:text-white">restaurant</span>
+                      <p className="text-base font-medium text-slate-900 dark:text-white">Diet</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setCurrentStep(2); }}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <span className="material-symbols-outlined text-slate-900 transition-transform duration-200 group-open:rotate-180 dark:text-white">
+                        expand_more
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="pb-4">
+                    <div className="grid grid-cols-1 gap-x-4 border-t border-slate-200 dark:border-slate-800 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1 py-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Dietary Preference</p>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">
+                          {formData.dietType.charAt(0).toUpperCase() + formData.dietType.slice(1)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                {/* Habits Accordion */}
+                <details className="group flex flex-col rounded-xl border border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-background-dark">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-slate-900 dark:text-white">recycling</span>
+                      <p className="text-base font-medium text-slate-900 dark:text-white">Eco Habits</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setCurrentStep(4); }}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <span className="material-symbols-outlined text-slate-900 transition-transform duration-200 group-open:rotate-180 dark:text-white">
+                        expand_more
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="pb-4">
+                    <div className="flex flex-col gap-2 border-t border-slate-200 py-4 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${formData.useReusableBags ? 'text-primary' : 'text-slate-400'}`}>
+                          {formData.useReusableBags ? 'check_circle' : 'cancel'}
+                        </span>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">Use reusable shopping bags</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${formData.recycleWaste ? 'text-primary' : 'text-slate-400'}`}>
+                          {formData.recycleWaste ? 'check_circle' : 'cancel'}
+                        </span>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">Recycle paper, glass, and plastic</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${formData.compostFood ? 'text-primary' : 'text-slate-400'}`}>
+                          {formData.compostFood ? 'check_circle' : 'cancel'}
+                        </span>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">Compost food scraps</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${formData.unplugElectronics ? 'text-primary' : 'text-slate-400'}`}>
+                          {formData.unplugElectronics ? 'check_circle' : 'cancel'}
+                        </span>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">Unplug electronics when not in use</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${formData.buyLocalProduce ? 'text-primary' : 'text-slate-400'}`}>
+                          {formData.buyLocalProduce ? 'check_circle' : 'cancel'}
+                        </span>
+                        <p className="text-sm text-slate-900 dark:text-slate-200">Buy local produce when possible</p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </>
+          )}
+
           {/* Future steps placeholder */}
-          {currentStep > 4 && (
+          {currentStep > 5 && (
             <div className="flex flex-col items-center justify-center py-20">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Step {currentStep}: {stepTitles[currentStep]}
@@ -629,7 +833,7 @@ export default function SurveyForm() {
               onClick={handleNext}
               className="rounded-full bg-primary px-8 py-3 text-sm font-bold text-slate-900 hover:bg-primary/80"
             >
-              {currentStep === totalSteps ? 'Submit' : 'Next Step'}
+              {currentStep === totalSteps ? 'Submit My Survey' : 'Next Step'}
             </button>
           </div>
         </div>
