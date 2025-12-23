@@ -29,7 +29,7 @@ public class CarbonLogController {
 
     @Autowired
     private CarbonCalcService carbonCalcService;
-    
+
     @Autowired
     private DashboardService dashboardService;
 
@@ -47,17 +47,17 @@ public class CarbonLogController {
 
         return ResponseEntity.ok(carbonLogRepository.save(log));
     }
-    
+
     @PostMapping("/from-survey")
     public ResponseEntity<Map<String, Object>> createLogFromSurvey(
-            @RequestBody SurveySubmissionDTO surveyData, 
+            @RequestBody SurveySubmissionDTO surveyData,
             Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Create carbon logs for each category
         Map<String, Double> breakdown = surveyData.getBreakdown();
-        
+
         // Transportation log
         if (breakdown.containsKey("transportation") && breakdown.get("transportation") > 0) {
             CarbonLog transportLog = new CarbonLog();
@@ -69,7 +69,7 @@ public class CarbonLogController {
             transportLog.setDescription("From carbon footprint survey");
             carbonLogRepository.save(transportLog);
         }
-        
+
         // Diet log
         if (breakdown.containsKey("diet") && breakdown.get("diet") > 0) {
             CarbonLog dietLog = new CarbonLog();
@@ -81,7 +81,7 @@ public class CarbonLogController {
             dietLog.setDescription("From carbon footprint survey");
             carbonLogRepository.save(dietLog);
         }
-        
+
         // Energy log
         if (breakdown.containsKey("energy") && breakdown.get("energy") > 0) {
             CarbonLog energyLog = new CarbonLog();
@@ -93,7 +93,7 @@ public class CarbonLogController {
             energyLog.setDescription("From carbon footprint survey");
             carbonLogRepository.save(energyLog);
         }
-        
+
         // Lifestyle log (if negative, it's a reduction)
         if (breakdown.containsKey("lifestyle")) {
             CarbonLog lifestyleLog = new CarbonLog();
@@ -109,15 +109,14 @@ public class CarbonLogController {
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Survey submitted successfully",
-                "totalEmissions", surveyData.getTotalEmissions()
-        ));
+                "totalEmissions", surveyData.getTotalEmissions()));
     }
-    
+
     @GetMapping("/dashboard-stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats(Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         DashboardStatsDTO stats = dashboardService.calculateDashboardStats(user);
         return ResponseEntity.ok(stats);
     }

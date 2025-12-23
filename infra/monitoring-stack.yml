@@ -1,0 +1,63 @@
+# Monitoring Stack Docker Compose Configuration
+# Prometheus + Grafana for metrics and monitoring
+
+# Prometheus - Metrics collection
+prometheus:
+  image: prom/prometheus:latest
+  container_name: carbon-calc-prometheus
+  volumes:
+    - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    - prometheus_data:/prometheus
+  ports:
+    - "9090:9090"
+  command:
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--storage.tsdb.path=/prometheus'
+  networks:
+    - carbon-network
+
+# Grafana - Metrics visualization
+grafana:
+  image: grafana/grafana:latest
+  container_name: carbon-calc-grafana
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
+    - GF_USERS_ALLOW_SIGN_UP=false
+  ports:
+    - "3001:3000"
+  volumes:
+    - grafana_data:/var/lib/grafana
+  depends_on:
+    - prometheus
+  networks:
+    - carbon-network
+
+# Redis Exporter for Prometheus
+redis-exporter:
+  image: oliver006/redis_exporter:latest
+  container_name: carbon-calc-redis-exporter
+  environment:
+    - REDIS_ADDR=redis:6379
+  ports:
+    - "9121:9121"
+  depends_on:
+    - redis
+  networks:
+    - carbon-network
+
+# Postgres Exporter for Prometheus
+postgres-exporter:
+  image: prometheuscommunity/postgres-exporter:latest
+  container_name: carbon-calc-postgres-exporter
+  environment:
+    DATA_SOURCE_NAME: "postgresql://postgres:postgres@postgres:5432/carboncalc?sslmode=disable"
+  ports:
+    - "9187:9187"
+  depends_on:
+    - postgres
+  networks:
+    - carbon-network
+
+volumes:
+  prometheus_data:
+  grafana_data:

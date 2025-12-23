@@ -11,11 +11,39 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         '[format_sql]': true
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+  
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: carbon-calc-group
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.carboncalc.*
   
   # JWT configuration (custom properties)
   
@@ -24,10 +52,65 @@ app:
     secret: ${JWT_SECRET:your-secret-key-change-in-production}
     expiration: ${JWT_EXPIRATION:86400000}
 
+# External API Configuration
+carbon:
+  interface:
+    api:
+      key: ${CARBON_INTERFACE_API_KEY:}
+      url: https://www.carboninterface.com/api/v1
+
+energy:
+  data:
+    api:
+      url: https://api.carbonintensity.org.uk
+
+un:
+  emissions:
+    api:
+      url: https://data.un.org/ws/rest
+
+# Actuator Configuration (Monitoring)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
 server:
   port: ${API_PORT:8080}
+  error:
+    include-message: always
+    include-stacktrace: on_param
   
 logging:
+  level:
+    root: INFO
+    com.carboncalc: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.kafka: INFO
+    org.springframework.data.redis: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/carbon-calc.log
+    max-size: 10MB
+    max-history: 30
   level:
     '[com.carboncalc]': DEBUG
     '[org.springframework.security]': DEBUG

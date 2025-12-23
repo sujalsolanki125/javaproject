@@ -19,7 +19,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -29,30 +29,32 @@ public class UserController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(user);
     }
-    
+
     @GetMapping("/profile")
     public ResponseEntity<UserProfileDTO> getUserProfile(Principal principal) {
         User user = userService.getUserByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         UserProfileDTO profile = new UserProfileDTO();
-        profile.setFullName(user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName() : user.getUsername());
+        profile.setFullName(
+                user.getFirstName() != null ? user.getFirstName() + " " + user.getLastName() : user.getUsername());
         profile.setEmail(user.getEmail());
         profile.setLocation(user.getLocation());
         profile.setAgeGroup(user.getAgeGroup());
         profile.setWeeklyReports(user.getWeeklyReports() != null ? user.getWeeklyReports() : true);
-        profile.setAchievementNotifications(user.getAchievementNotifications() != null ? user.getAchievementNotifications() : false);
-        
+        profile.setAchievementNotifications(
+                user.getAchievementNotifications() != null ? user.getAchievementNotifications() : false);
+
         return ResponseEntity.ok(profile);
     }
-    
+
     @PutMapping("/profile")
     public ResponseEntity<Map<String, Object>> updateProfile(
-            @RequestBody UserProfileDTO profileDTO, 
+            @RequestBody UserProfileDTO profileDTO,
             Principal principal) {
         User user = userService.getUserByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         // Parse full name
         if (profileDTO.getFullName() != null && !profileDTO.getFullName().isEmpty()) {
             String[] nameParts = profileDTO.getFullName().split(" ", 2);
@@ -61,47 +63,47 @@ public class UserController {
                 user.setLastName(nameParts[1]);
             }
         }
-        
+
         user.setLocation(profileDTO.getLocation());
         user.setAgeGroup(profileDTO.getAgeGroup());
-        
+
         userService.updateUser(user.getId(), user);
-        
+
         return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated successfully"));
     }
-    
+
     @PutMapping("/change-password")
     public ResponseEntity<Map<String, Object>> changePassword(
             @RequestBody PasswordChangeDTO passwordDTO,
             Principal principal) {
         User user = userService.getUserByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         // Verify current password
         if (!passwordEncoder.matches(passwordDTO.getCurrentPassword(), user.getPassword())) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Current password is incorrect"));
         }
-        
+
         // Update password
         user.setPassword(passwordEncoder.encode(passwordDTO.getNewPassword()));
         userService.updateUser(user.getId(), user);
-        
+
         return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully"));
     }
-    
+
     @PutMapping("/notification-preferences")
     public ResponseEntity<Map<String, Object>> updateNotificationPreferences(
             @RequestBody NotificationPreferencesDTO preferencesDTO,
             Principal principal) {
         User user = userService.getUserByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         user.setWeeklyReports(preferencesDTO.getWeeklyReports());
         user.setAchievementNotifications(preferencesDTO.getAchievementNotifications());
-        
+
         userService.updateUser(user.getId(), user);
-        
+
         return ResponseEntity.ok(Map.of("success", true, "message", "Notification preferences updated"));
     }
 
@@ -128,4 +130,3 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 }
-

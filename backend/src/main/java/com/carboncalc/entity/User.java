@@ -33,10 +33,10 @@ public class User {
 
     private String firstName;
     private String lastName;
-    
+
     private String location;
     private String ageGroup;
-    
+
     private Boolean weeklyReports;
     private Boolean achievementNotifications;
 
