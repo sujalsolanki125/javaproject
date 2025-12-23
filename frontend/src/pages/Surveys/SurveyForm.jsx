@@ -13,7 +13,14 @@ export default function SurveyForm() {
     longHaulFlights: 0,
     // Step 2: Diet
     dietType: 'vegetarian',
-    // Step 3-5 will be added later
+    // Step 3: Energy
+    electricityUsage: '',
+    electricityUnit: 'kWh',
+    naturalGasUsage: '',
+    naturalGasUnit: 'therms',
+    heatingOilUsage: '',
+    heatingOilUnit: 'gallons per year',
+    // Step 4-5 will be added later
   });
 
   const totalSteps = 5;
@@ -49,8 +56,8 @@ export default function SurveyForm() {
   const stepTitles = {
     1: 'Transportation',
     2: 'Food & Diet',
-    3: 'Energy & Home',
-    4: 'Shopping & Consumption',
+    3: 'Home Energy',
+    4: 'Waste & Consumption',
     5: 'Review & Submit'
   };
 
@@ -315,8 +322,157 @@ export default function SurveyForm() {
             </>
           )}
 
+          {/* Step 3: Home Energy */}
+          {currentStep === 3 && (
+            <>
+              {/* Page Heading */}
+              <div className="flex flex-col gap-2">
+                <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">
+                  Step 3: Home Energy
+                </h1>
+                <p className="text-base text-slate-500 dark:text-slate-400">
+                  Let's look at your home energy use. Check your utility bills for the most accurate numbers.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-800/50 sm:p-8">
+                <div className="flex flex-col gap-6">
+                  {/* Electricity Section */}
+                  <div>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white pb-3">
+                      Electricity
+                    </h2>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <label className="flex flex-1 flex-col">
+                        <div className="flex items-center gap-2 pb-2">
+                          <p className="text-base font-medium text-slate-800 dark:text-slate-200">
+                            Average monthly usage
+                          </p>
+                          <div className="group relative">
+                            <span className="material-symbols-outlined cursor-pointer text-base text-slate-500 dark:text-slate-400">
+                              info
+                            </span>
+                            <div className="pointer-events-none absolute bottom-full mb-2 w-60 rounded-lg bg-slate-800 p-3 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-slate-900">
+                              Kilowatt-hours (kWh) are the standard unit for electricity. Find this on your monthly bill. More kWh means a higher carbon impact.
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          value={formData.electricityUsage}
+                          onChange={(e) => handleInputChange('electricityUsage', e.target.value)}
+                          className="form-input h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                          placeholder="e.g., 500"
+                        />
+                      </label>
+                      <label className="flex flex-1 flex-col">
+                        <p className="text-base font-medium text-slate-800 dark:text-slate-200 pb-2">
+                          Unit
+                        </p>
+                        <select
+                          value={formData.electricityUnit}
+                          onChange={(e) => handleInputChange('electricityUnit', e.target.value)}
+                          className="form-select h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                          <option>kWh</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-200 dark:border-slate-700"></div>
+
+                  {/* Heating Section */}
+                  <div>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white pb-3">
+                      Heating
+                    </h2>
+                    
+                    {/* Natural Gas */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
+                      <label className="flex flex-1 flex-col">
+                        <div className="flex items-center gap-2 pb-2">
+                          <p className="text-base font-medium text-slate-800 dark:text-slate-200">
+                            Natural gas usage
+                          </p>
+                          <div className="group relative">
+                            <span className="material-symbols-outlined cursor-pointer text-base text-slate-500 dark:text-slate-400">
+                              info
+                            </span>
+                            <div className="pointer-events-none absolute bottom-full mb-2 w-60 rounded-lg bg-slate-800 p-3 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-slate-900">
+                              Usually measured in therms or cubic feet (CCF). Burning natural gas for heat is a major source of emissions.
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          value={formData.naturalGasUsage}
+                          onChange={(e) => handleInputChange('naturalGasUsage', e.target.value)}
+                          className="form-input h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                          placeholder="e.g., 70"
+                        />
+                      </label>
+                      <label className="flex flex-1 flex-col">
+                        <p className="text-base font-medium text-slate-800 dark:text-slate-200 pb-2">
+                          Unit
+                        </p>
+                        <select
+                          value={formData.naturalGasUnit}
+                          onChange={(e) => handleInputChange('naturalGasUnit', e.target.value)}
+                          className="form-select h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                          <option>therms</option>
+                          <option>cubic feet (CCF)</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    {/* Heating Oil */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <label className="flex flex-1 flex-col">
+                        <div className="flex items-center gap-2 pb-2">
+                          <p className="text-base font-medium text-slate-800 dark:text-slate-200">
+                            Heating oil usage
+                          </p>
+                          <div className="group relative">
+                            <span className="material-symbols-outlined cursor-pointer text-base text-slate-500 dark:text-slate-400">
+                              info
+                            </span>
+                            <div className="pointer-events-none absolute bottom-full mb-2 w-60 rounded-lg bg-slate-800 p-3 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-slate-900">
+                              Enter your total usage for the year, usually found on your supplier's statements.
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          value={formData.heatingOilUsage}
+                          onChange={(e) => handleInputChange('heatingOilUsage', e.target.value)}
+                          className="form-input h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                          placeholder="e.g., 250"
+                        />
+                      </label>
+                      <label className="flex flex-1 flex-col">
+                        <p className="text-base font-medium text-slate-800 dark:text-slate-200 pb-2">
+                          Unit
+                        </p>
+                        <select
+                          value={formData.heatingOilUnit}
+                          onChange={(e) => handleInputChange('heatingOilUnit', e.target.value)}
+                          className="form-select h-14 w-full rounded-xl border border-slate-200 bg-slate-50 p-[15px] text-base text-slate-900 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                          <option>gallons per year</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Future steps placeholder */}
-          {currentStep > 2 && (
+          {currentStep > 3 && (
             <div className="flex flex-col items-center justify-center py-20">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Step {currentStep}: {stepTitles[currentStep]}
