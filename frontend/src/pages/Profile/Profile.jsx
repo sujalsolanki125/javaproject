@@ -1,15 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 import { userService } from '../../services/user.service';
 import { carbonService } from '../../services/carbon.service';
+import toast from 'react-hot-toast';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -47,6 +51,11 @@ export default function Profile() {
         weeklyReports: profile.weeklyReports !== undefined ? profile.weeklyReports : true,
         achievementNotifications: profile.achievementNotifications || false
       }));
+      
+      // Set profile picture if exists
+      if (profile.profilePicture) {
+        setProfilePicture(profile.profilePicture);
+      }
 
       // Load carbon footprint summary
       const stats = await carbonService.getDashboardStats();
@@ -123,6 +132,55 @@ export default function Profile() {
     }
   };
 
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (3MB = 3 * 1024 * 1024 bytes)
+    const maxSize = 3 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 3MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result;
+        
+        try {
+          const response = await userService.uploadProfilePicture(base64String);
+          setProfilePicture(base64String);
+          toast.success('Profile picture updated successfully!');
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Failed to upload image');
+        } finally {
+          setUploadingImage(false);
+        }
+      };
+      reader.onerror = () => {
+        toast.error('Failed to read image file');
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      toast.error('Failed to upload image');
+      setUploadingImage(false);
+    }
+  };
+
+  const handleProfilePictureClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleLogout = () => {
     authService.logout();
     navigate('/login');
@@ -191,15 +249,32 @@ export default function Profile() {
             <aside className="w-full lg:w-1/3 lg:max-w-xs">
               <div className="sticky top-8 flex flex-col items-center rounded-xl bg-white p-6 shadow-sm dark:border dark:border-white/10 dark:bg-background-dark">
                 <div className="relative mb-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                   <div
                     className="aspect-square h-32 w-32 rounded-full bg-cover bg-center bg-no-repeat"
                     style={{
-                      backgroundImage:
-                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdqm6VUfIPBHpPQo7ZKSpPLmltvQY_dpL7TsOGsimQ0YLHhDT9pffS3LmcuV2_9ZcVSLadI44Usx59BnnY8fRDaXmgyQs_ix0-yx-vQyG9xNSEg_ADD6WUG0K1Nh-g780kERTOccsro1o47zGGUTtmzA8hvOfse5OUntEgBNuivUwbNxc5vBqMP3FdhXexIPMbgVL0xsuthfFKgTLGdstomUIEzPyfuYu_leLlANr0yfz6pSOuUrXaaZUuMgDCMbJk1evdfRWX_-w")'
+                      backgroundImage: profilePicture 
+                        ? `url(${profilePicture})` 
+                        : 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'128\' height=\'128\' viewBox=\'0 0 128 128\'%3E%3Ccircle cx=\'64\' cy=\'64\' r=\'64\' fill=\'%23E5E7EB\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'48\' fill=\'%239CA3AF\' text-anchor=\'middle\' dy=\'.3em\'%3E' + (profileData.fullName?.charAt(0) || 'U') + '%3C/text%3E%3C/svg%3E")',
+                      backgroundColor: '#E5E7EB'
                     }}
                   ></div>
-                  <button className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-background-dark hover:bg-primary/90">
-                    <span className="material-symbols-outlined text-lg">edit</span>
+                  <button 
+                    onClick={handleProfilePictureClick}
+                    disabled={uploadingImage}
+                    className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-background-dark hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {uploadingImage ? (
+                      <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                    ) : (
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                    )}
                   </button>
                 </div>
                 <div className="text-center">

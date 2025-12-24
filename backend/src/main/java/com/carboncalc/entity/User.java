@@ -37,6 +37,9 @@ public class User {
     private String location;
     private String ageGroup;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String profilePicture; // Base64 encoded image
+
     private Boolean weeklyReports;
     private Boolean achievementNotifications;
 

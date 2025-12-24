@@ -10,4 +10,5 @@ public class UserProfileDTO {
     private String ageGroup;
     private Boolean weeklyReports;
     private Boolean achievementNotifications;
+    private String profilePicture;
 }

@@ -44,6 +44,7 @@ public class UserController {
         profile.setWeeklyReports(user.getWeeklyReports() != null ? user.getWeeklyReports() : true);
         profile.setAchievementNotifications(
                 user.getAchievementNotifications() != null ? user.getAchievementNotifications() : false);
+        profile.setProfilePicture(user.getProfilePicture());
 
         return ResponseEntity.ok(profile);
     }
@@ -90,6 +91,31 @@ public class UserController {
         userService.updateUser(user.getId(), user);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully"));
+    }
+
+    @PostMapping("/profile-picture")
+    public ResponseEntity<Map<String, Object>> uploadProfilePicture(
+            @RequestBody Map<String, String> payload,
+            Principal principal) {
+        User user = userService.getUserByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String base64Image = payload.get("profilePicture");
+
+        // Validate image size (base64 string length should be less than ~4MB for 3MB
+        // image)
+        if (base64Image != null && base64Image.length() > 4 * 1024 * 1024) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Image size must be less than 3MB"));
+        }
+
+        user.setProfilePicture(base64Image);
+        userService.updateUser(user.getId(), user);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Profile picture updated successfully",
+                "profilePicture", base64Image));
     }
 
     @PutMapping("/notification-preferences")

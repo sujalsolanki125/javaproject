@@ -29,6 +29,14 @@ const userService = {
   getUserStats: async () => {
     const response = await api.get('/api/users/stats');
     return response.data;
+  },
+
+  // Upload profile picture
+  uploadProfilePicture: async (base64Image) => {
+    const response = await api.post('/api/users/profile-picture', {
+      profilePicture: base64Image
+    });
+    return response.data;
   }
 };
 export { userService };export default userService;
