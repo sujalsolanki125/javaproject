@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Sidebar from '../../components/layout/Sidebar';
+import { Sidebar } from '../../components/layout/Sidebar';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import AnalyticsCard from './AnalyticsCard';
 import carbonService from '../../services/carbon.service';

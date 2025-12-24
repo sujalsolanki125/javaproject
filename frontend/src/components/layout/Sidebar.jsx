@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
-export default function Sidebar() {
+export function Sidebar() {
   const location = useLocation();
 
   const navItems = [
