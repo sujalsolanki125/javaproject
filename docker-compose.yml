@@ -1,19 +1,21 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
+  mysql:
+    image: mysql:8.0
     container_name: carbon-calc-db
     environment:
-      POSTGRES_DB: carboncalc
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_DATABASE: carboncalc
+      MYSQL_USER: carboncalc
+      MYSQL_PASSWORD: carboncalc123
+      MYSQL_ROOT_PASSWORD: root123
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     networks:
       - carbon-network
+    command: --default-authentication-plugin=mysql_native_password
 
   redis:
     image: redis:7-alpine
@@ -67,16 +69,16 @@ services:
       dockerfile: infra/Dockerfile.backend
     container_name: carbon-calc-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carboncalc
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/carboncalc?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: carboncalc
+      SPRING_DATASOURCE_PASSWORD: carboncalc123
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      - mysql
       - redis
       - kafka
     networks:
@@ -97,7 +99,7 @@ services:
       - carbon-network
 
 volumes:
-  postgres_data:
+  mysql_data:
   redis_data:
   kafka_data:
 

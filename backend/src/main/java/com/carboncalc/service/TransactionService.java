@@ -30,7 +30,7 @@ public class TransactionService {
 
         MarketplaceItem item = marketplaceService.getItemById(itemId);
 
-        if (!item.getAvailable() || item.getStock() < quantity) {
+        if (!item.getIsActive() || item.getStock() < quantity) {
             throw new RuntimeException("Item not available or insufficient stock");
         }
 

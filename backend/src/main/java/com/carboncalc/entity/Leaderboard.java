@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "leaderboard")
+@Table(name = "leaderboards")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public class Leaderboard {
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "rank_position", nullable = false)
     private Integer rank;
 
     @Column(nullable = false)

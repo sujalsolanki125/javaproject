@@ -8,7 +8,12 @@ import java.util.List;
 
 @Repository
 public interface MarketplaceItemRepository extends JpaRepository<MarketplaceItem, Long> {
-    List<MarketplaceItem> findByAvailableTrue();
+    List<MarketplaceItem> findByIsActiveTrue();
 
-    List<MarketplaceItem> findByCategory(String category);
+    List<MarketplaceItem> findByCategoryAndIsActiveTrue(String category);
+
+    List<MarketplaceItem> findByPriceBetweenAndIsActiveTrue(Double minPrice, Double maxPrice);
+
+    List<MarketplaceItem> findByCategoryAndPriceBetweenAndIsActiveTrue(
+            String category, Double minPrice, Double maxPrice);
 }

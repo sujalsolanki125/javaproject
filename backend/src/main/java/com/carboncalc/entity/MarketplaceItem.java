@@ -30,6 +30,9 @@ public class MarketplaceItem {
     @Column(nullable = false)
     private Double price;
 
+    @Column(name = "carbon_offset")
+    private String carbonOffset; // e.g., "-50kg CO2", "-1 Tonne CO2"
+
     private String imageUrl;
 
     @Column(nullable = false)
@@ -37,9 +40,18 @@ public class MarketplaceItem {
 
     private String seller;
 
-    @Column(nullable = false)
-    private Boolean available = true;
+    @Column(nullable = false, name = "is_active")
+    private Boolean isActive = true;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

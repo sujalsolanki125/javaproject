@@ -18,11 +18,11 @@ public class MarketplaceService {
     }
 
     public List<MarketplaceItem> getAvailableItems() {
-        return marketplaceItemRepository.findByAvailableTrue();
+        return marketplaceItemRepository.findByIsActiveTrue();
     }
 
     public List<MarketplaceItem> getItemsByCategory(String category) {
-        return marketplaceItemRepository.findByCategory(category);
+        return marketplaceItemRepository.findByCategoryAndIsActiveTrue(category);
     }
 
     public MarketplaceItem getItemById(Long id) {
@@ -42,7 +42,7 @@ public class MarketplaceService {
         item.setCategory(itemDetails.getCategory());
         item.setPrice(itemDetails.getPrice());
         item.setStock(itemDetails.getStock());
-        item.setAvailable(itemDetails.getAvailable());
+        item.setIsActive(itemDetails.getIsActive());
 
         return marketplaceItemRepository.save(item);
     }
@@ -55,7 +55,7 @@ public class MarketplaceService {
         MarketplaceItem item = getItemById(itemId);
         item.setStock(item.getStock() - quantity);
         if (item.getStock() <= 0) {
-            item.setAvailable(false);
+            item.setIsActive(false);
         }
         marketplaceItemRepository.save(item);
     }

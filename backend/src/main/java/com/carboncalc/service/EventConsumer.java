@@ -19,58 +19,63 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventConsumer {
 
-    // @KafkaListener will be used to consume events
-    // For now, implementing logging consumers
+        // @KafkaListener will be used to consume events
+        // For now, implementing logging consumers
+        // DISABLED - Kafka not running
 
-    @KafkaListener(topics = KafkaConfig.CARBON_LOG_CREATED_TOPIC, groupId = "carbon-calc-group")
-    public void consumeCarbonLogCreated(
-            @Payload CarbonLogCreatedEvent event,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        // @KafkaListener(topics = KafkaConfig.CARBON_LOG_CREATED_TOPIC, groupId =
+        // "carbon-calc-group")
+        public void consumeCarbonLogCreated(
+                        @Payload CarbonLogCreatedEvent event,
+                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
 
-        log.info("Received CarbonLogCreated event: userId={}, emission={}, category={} (partition={})",
-                event.getUserId(), event.getCarbonEmission(), event.getCategory(), partition);
+                log.info("Received CarbonLogCreated event: userId={}, emission={}, category={} (partition={})",
+                                event.getUserId(), event.getCarbonEmission(), event.getCategory(), partition);
 
-        // TODO: Trigger analytics update
-        // TODO: Check if goals achieved
-        // TODO: Check if badges unlocked
-    }
+                // TODO: Trigger analytics update
+                // TODO: Check if goals achieved
+                // TODO: Check if badges unlocked
+        }
 
-    @KafkaListener(topics = KafkaConfig.GOAL_ACHIEVED_TOPIC, groupId = "carbon-calc-group")
-    public void consumeGoalAchieved(
-            @Payload GoalAchievedEvent event,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        // @KafkaListener(topics = KafkaConfig.GOAL_ACHIEVED_TOPIC, groupId =
+        // "carbon-calc-group")
+        public void consumeGoalAchieved(
+                        @Payload GoalAchievedEvent event,
+                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
 
-        log.info("Received GoalAchieved event: userId={}, goal={} (partition={})",
-                event.getUserId(), event.getGoalTitle(), partition);
+                log.info("Received GoalAchieved event: userId={}, goal={} (partition={})",
+                                event.getUserId(), event.getGoalTitle(), partition);
 
-        // TODO: Send notification to user
-        // TODO: Update user achievements
-        // TODO: Award carbon points
-    }
+                // TODO: Send notification to user
+                // TODO: Update user achievements
+                // TODO: Award carbon points
+        }
 
-    @KafkaListener(topics = KafkaConfig.BADGE_UNLOCKED_TOPIC, groupId = "carbon-calc-group")
-    public void consumeBadgeUnlocked(
-            @Payload BadgeUnlockedEvent event,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        // @KafkaListener(topics = KafkaConfig.BADGE_UNLOCKED_TOPIC, groupId =
+        // "carbon-calc-group")
+        public void consumeBadgeUnlocked(
+                        @Payload BadgeUnlockedEvent event,
+                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
 
-        log.info("Received BadgeUnlocked event: userId={}, badge={} (partition={})",
-                event.getUserId(), event.getBadgeName(), partition);
+                log.info("Received BadgeUnlocked event: userId={}, badge={} (partition={})",
+                                event.getUserId(), event.getBadgeName(), partition);
 
-        // TODO: Send notification to user
-        // TODO: Update leaderboard
-        // TODO: Award carbon points
-    }
+                // TODO: Send notification to user
+                // TODO: Update leaderboard
+                // TODO: Award carbon points
+        }
 
-    @KafkaListener(topics = KafkaConfig.USER_NOTIFICATION_TOPIC, groupId = "carbon-calc-group")
-    public void consumeUserNotification(
-            @Payload UserNotificationEvent event,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        // @KafkaListener(topics = KafkaConfig.USER_NOTIFICATION_TOPIC, groupId =
+        // "carbon-calc-group")
+        public void consumeUserNotification(
+                        @Payload UserNotificationEvent event,
+                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
 
-        log.info("Received UserNotification event: userId={}, type={}, priority={} (partition={})",
-                event.getUserId(), event.getNotificationType(), event.getPriority(), partition);
+                log.info("Received UserNotification event: userId={}, type={}, priority={} (partition={})",
+                                event.getUserId(), event.getNotificationType(), event.getPriority(), partition);
 
-        // TODO: Store notification in database
-        // TODO: Send email if weeklyReports enabled
-        // TODO: Send push notification if enabled
-    }
+                // TODO: Store notification in database
+                // TODO: Send email if weeklyReports enabled
+                // TODO: Send push notification if enabled
+        }
 }

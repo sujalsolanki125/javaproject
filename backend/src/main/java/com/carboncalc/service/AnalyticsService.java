@@ -61,7 +61,7 @@ public class AnalyticsService {
         log.info("Generating {} report for user {} from {} to {}", reportType, user.getUsername(), startDate, endDate);
 
         // Fetch carbon logs for date range
-        List<CarbonLog> logs = carbonLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+        List<CarbonLog> logs = carbonLogRepository.findByUserIdAndLogDateBetween(user.getId(), startDate, endDate);
 
         // Calculate total emissions
         Double totalEmissions = logs.stream()
@@ -199,10 +199,12 @@ public class AnalyticsService {
         LocalDate previousStart = currentStart.minusDays(days);
         LocalDate previousEnd = currentStart.minusDays(1);
 
-        Double currentEmissions = carbonLogRepository.findByUserAndLogDateBetween(user, currentStart, currentEnd)
+        Double currentEmissions = carbonLogRepository
+                .findByUserIdAndLogDateBetween(user.getId(), currentStart, currentEnd)
                 .stream().mapToDouble(CarbonLog::getCarbonEmission).sum();
 
-        Double previousEmissions = carbonLogRepository.findByUserAndLogDateBetween(user, previousStart, previousEnd)
+        Double previousEmissions = carbonLogRepository
+                .findByUserIdAndLogDateBetween(user.getId(), previousStart, previousEnd)
                 .stream().mapToDouble(CarbonLog::getCarbonEmission).sum();
 
         Double percentChange = previousEmissions > 0
