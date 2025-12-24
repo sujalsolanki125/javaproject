@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
-import userService from '../../services/user.service';
-import carbonService from '../../services/carbon.service';
+import { userService } from '../../services/user.service';
+import { carbonService } from '../../services/carbon.service';
 
 export default function Profile() {
   const navigate = useNavigate();

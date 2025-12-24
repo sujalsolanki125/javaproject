@@ -31,5 +31,4 @@ const userService = {
     return response.data;
   }
 };
-
-export default userService;
+export { userService };export default userService;

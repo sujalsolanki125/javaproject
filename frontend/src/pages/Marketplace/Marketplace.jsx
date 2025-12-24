@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import MarketplaceService from '../../services/marketplace.service';
+import { marketplaceService } from '../../services/marketplace.service';
 import { toast } from 'react-hot-toast';
 
 export default function Marketplace() {
@@ -27,7 +27,7 @@ export default function Marketplace() {
         minPrice: priceRange[0],
         maxPrice: priceRange[1]
       };
-      const data = await MarketplaceService.getProducts(filters);
+      const data = await marketplaceService.getProducts(filters);
       setProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -39,7 +39,7 @@ export default function Marketplace() {
 
   const fetchCartCount = async () => {
     try {
-      const count = await MarketplaceService.getCartCount();
+      const count = await marketplaceService.getCartCount();
       setCartCount(count);
     } catch (error) {
       console.error('Error fetching cart count:', error);
@@ -48,7 +48,7 @@ export default function Marketplace() {
 
   const handleAddToCart = async (productId) => {
     try {
-      await MarketplaceService.addToCart(productId, 1);
+      await marketplaceService.addToCart(productId, 1);
       toast.success('Added to cart successfully!');
       fetchCartCount();
     } catch (error) {

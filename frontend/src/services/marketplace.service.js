@@ -1,6 +1,6 @@
 import api from './api';
 
-const MarketplaceService = {
+const marketplaceService = {
   /**
    * Get all products or filter by category and price
    */
@@ -83,4 +83,5 @@ const MarketplaceService = {
   }
 };
 
-export default MarketplaceService;
+export { marketplaceService };
+export default marketplaceService;

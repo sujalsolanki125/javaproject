@@ -154,4 +154,4 @@ const carbonService = {
   }
 };
 
-export default carbonService;
+export { carbonService };

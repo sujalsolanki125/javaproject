@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import carbonService from '../../services/carbon.service';
+import { carbonService } from '../../services/carbon.service';
 
 export default function SurveyForm() {
   const navigate = useNavigate();
