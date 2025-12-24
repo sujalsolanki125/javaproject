@@ -5,8 +5,8 @@ A full-stack application for tracking and managing carbon footprint with marketp
 ## Tech Stack
 
 - **Backend**: Spring Boot 3.2.0 (Java 21 LTS)
-- **Frontend**: React + Tailwind CSS
-- **Database**: PostgreSQL
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **Database**: MySQL 9.0.1
 - **Authentication**: JWT
 
 ## Getting Started
@@ -15,32 +15,39 @@ A full-stack application for tracking and managing carbon footprint with marketp
 - Java 21 (LTS)
 - Maven 3.9+
 - Node.js 18+
-- Docker & Docker Compose
+- MySQL 9.0+
 
 ### Recent Updates
 - ✅ **December 2025**: Upgraded to Java 21 LTS using OpenRewrite migration tool
+- ✅ Migrated from PostgreSQL to MySQL 9.0.1
+- ✅ Marketplace feature with shopping cart implemented
 - ✅ All dependencies updated and tested with Java 21
 - ✅ Build and tests passing successfully
 
-### Running with Docker
+### Setup Instructions
+
+#### 1. Database Setup
 ```bash
-docker-compose up
+# MySQL should be running on port 3307
+# Create database: carboncalc
+# Username: root
+# Password: @Sujal5412
 ```
 
-### Running Locally
-
-#### Backend
+#### 2. Backend
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
+Backend will run on: http://localhost:8080
 
-#### Frontend
+#### 3. Frontend
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
+Frontend will run on: http://localhost:3000
 
 ## Features
 
