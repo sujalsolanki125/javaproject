@@ -30,10 +30,9 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Convert email to username (use email prefix before @)
-      const username = formData.email.split('@')[0];
+      // Send email directly - backend will handle username lookup
       await authService.login({
-        username: username,
+        username: formData.email, // Send email in username field, backend accepts both
         password: formData.password
       });
       navigate('/dashboard');
@@ -87,20 +86,20 @@ export default function Login() {
             {/* Email Field */}
             <label className="flex flex-col min-w-40 flex-1">
               <p className="text-[#111814] dark:text-white text-base font-medium leading-normal pb-2">
-                Email
+                Email or Username
               </p>
               <div className="flex w-full flex-1 items-stretch rounded-lg">
                 <input
-                  type="email"
+                  type="text"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111814] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbe6df] dark:border-[#334D3F] bg-white dark:bg-[#172D20] focus:border-primary/50 h-14 placeholder:text-[#608a72] dark:placeholder:text-[#a0c2b0] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
-                  placeholder="Enter your email"
+                  placeholder="Enter your email or username"
                   required
                 />
                 <div className="text-[#608a72] dark:text-[#a0c2b0] flex border border-[#dbe6df] dark:border-[#334D3F] bg-white dark:bg-[#172D20] items-center justify-center pr-[15px] rounded-r-lg border-l-0">
-                  <span className="material-symbols-outlined">mail</span>
+                  <span className="material-symbols-outlined">person</span>
                 </div>
               </div>
             </label>

@@ -46,13 +46,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        // Support login with either username or email
+        String usernameOrEmail = request.getUsername();
+        User user = userService.getUserByUsername(usernameOrEmail)
+                .or(() -> userService.getUserByEmail(usernameOrEmail))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword()));
 
-        UserDetails userDetails = userService.loadUserByUsername(request.getUsername());
+        UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);
-
-        User user = userService.getUserByUsername(request.getUsername()).orElseThrow();
 
         return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getEmail()));
     }
