@@ -33,6 +33,9 @@ public class CarbonLogController {
     @Autowired
     private DashboardService dashboardService;
 
+    @Autowired
+    private LeaderboardService leaderboardService;
+
     @PostMapping
     public ResponseEntity<CarbonLog> createLog(@RequestBody CarbonLog log, Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
@@ -106,6 +109,10 @@ public class CarbonLogController {
             carbonLogRepository.save(lifestyleLog);
         }
 
+        // Update leaderboard with total emissions
+        leaderboardService.updateLeaderboard(user.getId(), surveyData.getTotalEmissions(),
+                (int) (surveyData.getTotalEmissions() * 10));
+
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Survey submitted successfully",
@@ -147,5 +154,32 @@ public class CarbonLogController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Double total = carbonLogRepository.getTotalCarbonByUserId(user.getId());
         return ResponseEntity.ok(total != null ? total : 0.0);
+    }
+
+    @GetMapping("/trend")
+    public ResponseEntity<Map<String, Double>> getTrendData(
+            @RequestParam(defaultValue = "30") int days,
+            Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days - 1);
+
+        List<CarbonLog> logs = carbonLogRepository.findByUserIdAndLogDateBetween(
+                user.getId(), startDate, endDate);
+
+        // Group by date and sum emissions
+        Map<String, Double> trendData = new LinkedHashMap<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            final LocalDate currentDate = date;
+            double dailyTotal = logs.stream()
+                    .filter(log -> log.getLogDate() != null && log.getLogDate().equals(currentDate))
+                    .mapToDouble(CarbonLog::getCarbonEmission)
+                    .sum();
+            trendData.put(currentDate.toString(), dailyTotal);
+        }
+
+        return ResponseEntity.ok(trendData);
     }
 }

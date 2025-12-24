@@ -61,6 +61,14 @@ const carbonService = {
     return response.data;
   },
 
+  // Get trend data for graph
+  getTrendData: async (days = 30) => {
+    const response = await api.get('/api/carbon-logs/trend', {
+      params: { days }
+    });
+    return response.data;
+  },
+
   // Calculate carbon footprint from survey
   calculateFootprint: (surveyData) => {
     let totalEmissions = 0;
