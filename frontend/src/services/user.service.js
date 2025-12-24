@@ -7,6 +7,12 @@ const userService = {
     return response.data;
   },
 
+  // Alias for getProfile
+  getUserProfile: async () => {
+    const response = await api.get('/api/users/profile');
+    return response.data;
+  },
+
   // Update user profile
   updateProfile: async (profileData) => {
     const response = await api.put('/api/users/profile', profileData);

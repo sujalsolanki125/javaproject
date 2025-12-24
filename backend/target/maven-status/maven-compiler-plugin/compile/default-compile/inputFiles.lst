@@ -14,6 +14,7 @@ D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\A
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\CarbonLogController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\CartController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\GoalsController.java
+D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\LeaderboardController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\MarketplaceController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\SurveyController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\TransactionsController.java
@@ -60,6 +61,7 @@ D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\Cart
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\DashboardService.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\EventConsumer.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\EventPublisher.java
+D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\LeaderboardService.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\MarketplaceService.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\ReportExportService.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\service\SurveyService.java

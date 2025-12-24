@@ -99,7 +99,11 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
-    
+      // Keep default/empty state on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadTrendData = async () => {
     try {
@@ -109,10 +113,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error('Failed to load trend data:', err);
       setTrendData({});
-    }
-  };  // Keep default/empty state on error
-    } finally {
-      setLoading(false);
     }
   };
 
