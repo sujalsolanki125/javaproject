@@ -18,10 +18,10 @@ export default function Home() {
   };
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+    <div className="relative flex min-h-screen w-full flex-col bg-white">
       <div className="layout-container flex h-full grow flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-b border-solid border-b-[#f0f5f1] dark:border-b-gray-800">
+        <header className="sticky top-0 z-50 bg-gray-100 border-b border-gray-300">
           <div className="mx-auto flex max-w-7xl items-center justify-between whitespace-nowrap px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-4 text-[#111813] dark:text-white">
               <div className="size-6 text-primary">

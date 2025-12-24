@@ -1,4 +1,4 @@
-export default function DashboardHeader({ title = 'Analytics Dashboard' }) {
+export function DashboardHeader({ title = 'Analytics Dashboard' }) {
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-100 px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-sm z-10">
       <div className="flex items-center gap-4 text-text-main">
