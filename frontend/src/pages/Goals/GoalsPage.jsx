@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { leaderboardService } from '../../services/leaderboard.service';
+import { userService } from '../../services/user.service';
 
 export default function GoalsPage() {
   const navigate = useNavigate();
   const [showAddGoal, setShowAddGoal] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [currentUserRank, setCurrentUserRank] = useState(null);
+  const [userProfile, setUserProfile] = useState({ profilePicture: null, fullName: '' });
 
   // Mock data for active goals
   const [goals, setGoals] = useState([
@@ -77,28 +82,27 @@ export default function GoalsPage() {
     }
   ];
 
-  // Mock data for leaderboard
-  const leaderboard = [
-    {
-      rank: 1,
-      username: 'Alex R.',
-      co2Saved: '15.2 kg',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCA6xu4KWXUefqx8IiNy38bJ5mZvvah1ZlT0VtuGn9VZgvND_RtbTseHBTPIQXWHN6NXdMxuGilVpxNnmi8Dl65vkuOev53UEMzj_ArWED-mZGjSGNk62-x0rhXmjdnUB2RduPQuqMTW5vaTxcweRCvLQo_oXaExYITrbpBUNgXgwQ9sPf5J6ouCinTNtvXwEEeOxmUHxPDuk6yH3EztCMce00lRTMBCs1iT5AfhjFoqFeRPC9zaZeDUp-m8xKkSd-s02HNLhCoPs'
-    },
-    {
-      rank: 2,
-      username: 'You',
-      co2Saved: '12.8 kg',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh-lE98o74vMhKWS8HfkBkPxsUuM7ErWCGjjWFswb8eBoMoYD9qAAfIGjQ1uQdvOkGvfRKGL46wsshuETbi8fhGuibjcXdoCCNYtKP1RDsjTp3ug_qmKjkL4QzFwMRg4cPFm1HoJp8qbuI9PhoRqJQxmne4LB0DqNjQYPgJ-aQfeORK5V1lv9QpIG-UyhPyRntOGrLKk4GppkN5hbmUNEnrgb2xEhkkK-cUSQQTKcWFxOC9m1_ZbiP94IhxnClgZdVgvN5Xy4G0ZI',
-      isCurrentUser: true
-    },
-    {
-      rank: 3,
-      username: 'Jordan P.',
-      co2Saved: '11.5 kg',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB5UUnR1hJav91I4PYyXjIWS-9ubuLCvEVDwoHptSvkmtKxNgJuG0wivSXYJoU04qFitiJViTA_Gk4pYB-yTi8d9p5Ia89gi6fpaxm7yHmmkjY-9zemUeudj0_1bYflhnpMRrcD3r4JF-TYfZBRujRzDHcFSDDT7AxOyT_uWeBALAu9pskFyEkijf_LwG_XmagQrpfvigwPbUC06b0hF825mdvMY2IDMZA4XtrYjPUKrtLyoPs3FHw3kB-pdqqqt5Sa10DwoTjiL7U'
-    }
-  ];
+  // Fetch leaderboard data and user profile
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [topData, userData, profile] = await Promise.all([
+          leaderboardService.getTopLeaderboard(10),
+          leaderboardService.getUserLeaderboard(),
+          userService.getUserProfile()
+        ]);
+
+        setLeaderboardData(topData);
+        setCurrentUserRank(userData);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setLeaderboardData([]);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark">
@@ -147,12 +151,14 @@ export default function GoalsPage() {
                   </a>
                 </div>
                 <div
-                  className="aspect-square h-10 w-10 rounded-full bg-cover bg-center bg-no-repeat"
+                  className="aspect-square h-10 w-10 rounded-full bg-cover bg-center bg-no-repeat flex items-center justify-center text-white font-bold text-sm"
                   style={{
-                    backgroundImage:
-                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDF56tikzewxd7OgsS_jlsWlCQv1B-DVK7nEWls2XW9Nnmxd1JXfTTzrZBmGNQEvemTGJLwdyR_H3EVpsSjb3K3EdVLUX9EZdLqmxemEKN9Cxvm9LYMFt9Yhsv_U0TTBDDKE7Xaef5b1unEaVs9cSQy7IH-E4C7rB3t7v3w_S3ms8WV2dZDQHs1LCDXcZAdtzkryys3y0KUmrkSbVT-A28weeovcZovep43ekzFZ1p7tQ20aoq28lnh4fLhWPTB06fdf16V1_VU5YM")'
+                    backgroundImage: userProfile.profilePicture ? `url(${userProfile.profilePicture})` : 'none',
+                    backgroundColor: userProfile.profilePicture ? 'transparent' : '#0DF26C'
                   }}
-                ></div>
+                >
+                  {!userProfile.profilePicture && (userProfile.fullName ? userProfile.fullName.charAt(0).toUpperCase() : 'U')}
+                </div>
               </div>
             </header>
 
@@ -272,40 +278,58 @@ export default function GoalsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border-light dark:divide-border-dark">
-                            {leaderboard.map((entry) => (
-                              <tr
-                                key={entry.rank}
-                                className={entry.isCurrentUser ? 'bg-primary/10' : ''}
-                              >
-                                <td
-                                  className={`whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0 ${
-                                    entry.isCurrentUser ? 'font-bold text-primary' : 'font-medium'
-                                  }`}
-                                >
-                                  {entry.rank}
-                                </td>
-                                <td
-                                  className={`whitespace-nowrap px-3 py-4 text-sm ${
-                                    entry.isCurrentUser ? 'font-bold text-primary' : ''
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className="aspect-square h-8 w-8 rounded-full bg-cover bg-center bg-no-repeat"
-                                      style={{ backgroundImage: `url("${entry.avatar}")` }}
-                                    ></div>
-                                    <span>{entry.username}</span>
-                                  </div>
-                                </td>
-                                <td
-                                  className={`whitespace-nowrap px-3 py-4 text-right text-sm ${
-                                    entry.isCurrentUser ? 'font-bold text-primary' : ''
-                                  }`}
-                                >
-                                  {entry.co2Saved}
+                            {leaderboardData.length > 0 ? (
+                              leaderboardData.map((entry) => {
+                                const isCurrentUser = currentUserRank && entry.username === currentUserRank.username;
+                                const userInitial = entry.fullName ? entry.fullName.charAt(0).toUpperCase() : 'U';
+                                
+                                return (
+                                  <tr
+                                    key={entry.rank}
+                                    className={isCurrentUser ? 'bg-primary/10' : ''}
+                                  >
+                                    <td
+                                      className={`whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0 ${
+                                        isCurrentUser ? 'font-bold text-primary' : 'font-medium'
+                                      }`}
+                                    >
+                                      {entry.rank}
+                                    </td>
+                                    <td
+                                      className={`whitespace-nowrap px-3 py-4 text-sm ${
+                                        isCurrentUser ? 'font-bold text-primary' : ''
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className="aspect-square h-8 w-8 rounded-full bg-cover bg-center bg-no-repeat flex items-center justify-center text-white text-xs font-bold"
+                                          style={{
+                                            backgroundImage: entry.profilePicture ? `url(${entry.profilePicture})` : 'none',
+                                            backgroundColor: entry.profilePicture ? 'transparent' : '#0DF26C'
+                                          }}
+                                        >
+                                          {!entry.profilePicture && userInitial}
+                                        </div>
+                                        <span>{entry.fullName}</span>
+                                      </div>
+                                    </td>
+                                    <td
+                                      className={`whitespace-nowrap px-3 py-4 text-right text-sm ${
+                                        isCurrentUser ? 'font-bold text-primary' : ''
+                                      }`}
+                                    >
+                                      {(entry.totalCarbonSaved || 0).toFixed(2)} kg
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan="3" className="py-8 text-center text-sm text-gray-500">
+                                  No leaderboard data available yet. Start logging your carbon emissions!
                                 </td>
                               </tr>
-                            ))}
+                            )}
                           </tbody>
                         </table>
                       </div>

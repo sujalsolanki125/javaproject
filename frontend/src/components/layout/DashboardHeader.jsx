@@ -1,4 +1,27 @@
+import { useState, useEffect } from 'react';
+import { userService } from '../../services/user.service';
+
 export function DashboardHeader({ title = 'Analytics Dashboard' }) {
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [userInitial, setUserInitial] = useState('U');
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await userService.getUserProfile();
+        if (profile.profilePicture) {
+          setProfilePicture(profile.profilePicture);
+        }
+        if (profile.fullName) {
+          setUserInitial(profile.fullName.charAt(0).toUpperCase());
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      }
+    };
+    loadProfile();
+  }, []);
+
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-100 px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-sm z-10">
       <div className="flex items-center gap-4 text-text-main">
@@ -14,11 +37,14 @@ export function DashboardHeader({ title = 'Analytics Dashboard' }) {
           <span className="material-symbols-outlined text-xl">settings</span>
         </button>
         <div
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary shadow-sm"
+          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary shadow-sm flex items-center justify-center text-white font-bold text-lg"
           style={{
-            backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCLZgR817uN6kdLu2AU9JoZnujC6JSsQs8ymZFQs2uclvN7WXQNafwdWXIkhahdF3LCz3WbiIxL1Rn5rLDCAq_RSHZ2UVLsAeH-A9j9Ln59UMH3sP0W2oFhZg6uatjXTw6KTVZXxwrWp1AF5ALdbcQCMZfS5J33Dz4x6u3YDII1rsEtr3b2WFb75uCsOE-qqlU5IxciIZvzbbJMAR9RIsLgICW2nXQf4upGo7blR8QzKUcF_FjqP5Qly2cIWFjkSuuKpgvyJ6wqUrk")'
+            backgroundImage: profilePicture ? `url(${profilePicture})` : 'none',
+            backgroundColor: profilePicture ? 'transparent' : '#0DF26C'
           }}
-        />
+        >
+          {!profilePicture && userInitial}
+        </div>
       </div>
     </header>
   );
