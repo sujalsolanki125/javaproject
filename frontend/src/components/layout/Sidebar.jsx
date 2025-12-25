@@ -8,11 +8,14 @@ export function Sidebar() {
   const [userInitial, setUserInitial] = useState('U');
 
   const navItems = [
+    { path: '/', icon: 'home', label: 'Home' },
     { path: '/dashboard', icon: 'monitoring', label: 'Dashboard' },
     { path: '/survey', icon: 'assignment', label: 'Survey' },
     { path: '/logs', icon: 'timeline', label: 'Logs' },
     { path: '/goals', icon: 'emoji_events', label: 'Goals' },
-    { path: '/marketplace', icon: 'storefront', label: 'Marketplace' }
+    { path: '/marketplace', icon: 'storefront', label: 'Marketplace' },
+    { path: '/orders', icon: 'receipt_long', label: 'Orders' },
+    { path: '/wishlist', icon: 'favorite', label: 'Wishlist' }
   ];
 
   const isActive = (path) => location.pathname === path;

@@ -19,8 +19,15 @@ public class MarketplaceItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "admin_catalog_product_id")
+    private Long adminCatalogProductId;
+
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "item_type")
+    @Enumerated(EnumType.STRING)
+    private ItemType itemType;
 
     private String description;
 
@@ -33,6 +40,7 @@ public class MarketplaceItem {
     @Column(name = "carbon_offset")
     private String carbonOffset; // e.g., "-50kg CO2", "-1 Tonne CO2"
 
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Column(nullable = false)
@@ -53,5 +61,12 @@ public class MarketplaceItem {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public enum ItemType {
+        tree_planting,
+        carbon_credit,
+        eco_product,
+        donation
     }
 }

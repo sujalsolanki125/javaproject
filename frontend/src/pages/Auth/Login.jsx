@@ -49,8 +49,7 @@ export default function Login() {
   };
 
   const handleForgotPassword = () => {
-    // TODO: Implement forgot password
-    navigate('/forgot-password');
+    navigate('/auth/forgot-password');
   };
 
   return (

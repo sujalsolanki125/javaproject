@@ -26,6 +26,10 @@ public class CartService {
      * Get all cart items for user
      */
     public List<CartItemDTO> getCartItems(User user) {
+        if (user == null) {
+            // Anonymous users have no server-side cart
+            return List.of();
+        }
         return cartItemRepository.findByUser(user)
                 .stream()
                 .map(this::convertToDTO)
@@ -113,6 +117,9 @@ public class CartService {
      * Get cart item count
      */
     public Long getCartCount(User user) {
+        if (user == null) {
+            return 0L;
+        }
         return cartItemRepository.countByUser(user);
     }
 
@@ -120,6 +127,9 @@ public class CartService {
      * Get cart total price
      */
     public Double getCartTotal(User user) {
+        if (user == null) {
+            return 0.0;
+        }
         return cartItemRepository.findByUser(user)
                 .stream()
                 .mapToDouble(CartItem::getTotalPrice)

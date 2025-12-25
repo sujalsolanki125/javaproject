@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { MainHeader } from '../../components/layout/MainHeader';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -13,56 +14,10 @@ export default function Home() {
     navigate('/survey');
   };
 
-  const handleLogin = () => {
-    navigate('/login');
-  };
-
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white">
       <div className="layout-container flex h-full grow flex-col">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-gray-100 border-b border-gray-300">
-          <div className="mx-auto flex max-w-7xl items-center justify-between whitespace-nowrap px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-4 text-[#111813] dark:text-white">
-              <div className="size-6 text-primary">
-                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
-                </svg>
-              </div>
-              <h2 className="text-[#111813] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">
-                CarbonCalc
-              </h2>
-            </div>
-            <div className="hidden lg:flex flex-1 justify-end gap-8">
-              <div className="flex items-center gap-9">
-                <Link to="/dashboard" className="text-[#111813] dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal">
-                  Dashboard
-                </Link>
-                <Link to="/survey" className="text-[#111813] dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal">
-                  Survey
-                </Link>
-                <Link to="/survey" className="text-[#111813] dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal">
-                  Calculator
-                </Link>
-                <Link to="/marketplace" className="text-[#111813] dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal">
-                  Marketplace
-                </Link>
-                <a href="#" className="text-[#111813] dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal">
-                  Learn
-                </a>
-              </div>
-              <button
-                onClick={handleLogin}
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary text-[#111813] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span className="truncate">Login</span>
-              </button>
-            </div>
-            <button className="lg:hidden p-2 rounded-md text-[#111813] dark:text-gray-300">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-          </div>
-        </header>
+        <MainHeader />
 
         <main>
           {/* Hero Section */}
@@ -85,100 +40,24 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Quick Calculator Card */}
-              <div className="bg-white dark:bg-background-dark/50 rounded-xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
-                <div className="flex flex-col gap-6">
-                  <label className="flex flex-col w-full">
-                    <p className="text-[#111813] dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                      Location
-                    </p>
-                    <select
-                      value={quickEstimate.location}
-                      onChange={(e) => setQuickEstimate({ ...quickEstimate, location: e.target.value })}
-                      className="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111813] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary dark:focus:border-primary h-12 p-3 text-base font-normal leading-normal"
-                    >
-                      <option>United States</option>
-                      <option>Canada</option>
-                      <option>United Kingdom</option>
-                    </select>
-                  </label>
-
-                  <div className="flex flex-col gap-2">
-                    <p className="text-[#111813] dark:text-gray-200 text-base font-medium leading-normal">
-                      Primary Transport Mode
-                    </p>
-                    <div className="flex gap-3 flex-wrap">
-                      {[
-                        { id: 'car', icon: 'directions_car', label: 'Car' },
-                        { id: 'public', icon: 'directions_bus', label: 'Public' },
-                        { id: 'bike', icon: 'pedal_bike', label: 'Bike' },
-                        { id: 'flight', icon: 'flight', label: 'Flight' }
-                      ].map((mode) => (
-                        <div
-                          key={mode.id}
-                          onClick={() => setQuickEstimate({ ...quickEstimate, transport: mode.id })}
-                          className={`flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-xl pl-3 pr-4 ${
-                            quickEstimate.transport === mode.id
-                              ? 'bg-primary/20 dark:bg-primary/30 ring-2 ring-primary'
-                              : 'bg-[#f0f5f1] dark:bg-gray-700'
-                          }`}
-                        >
-                          <span className={`material-symbols-outlined ${
-                            quickEstimate.transport === mode.id
-                              ? 'text-[#111813] dark:text-white'
-                              : 'text-[#111813] dark:text-gray-300'
-                          } text-xl`}>
-                            {mode.icon}
-                          </span>
-                          <p className={`text-sm font-medium leading-normal ${
-                            quickEstimate.transport === mode.id
-                              ? 'text-[#111813] dark:text-white'
-                              : 'text-[#111813] dark:text-gray-300'
-                          }`}>
-                            {mode.label}
-                          </p>
-                        </div>
-                      ))}
+              {/* Hero Image */}
+              <div className="relative">
+                <img
+                  src="/hero-image.png"
+                  alt="Hero image for carbon footprint calculator"
+                  className="w-full h-96 object-cover rounded-xl shadow-lg"
+                />
+                <div className="absolute inset-0 bg-green-600 bg-opacity-20 rounded-xl"></div>
+                <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                      <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-xl">eco</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 dark:text-white">Start Your Green Journey</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Track, reduce, and offset your carbon footprint</p>
                     </div>
                   </div>
-
-                  <div className="relative flex w-full flex-col items-start justify-between gap-3">
-                    <div className="flex w-full shrink-[3] items-center justify-between">
-                      <p className="text-[#111813] dark:text-gray-200 text-base font-medium leading-normal">
-                        Home energy (kWh per month)
-                      </p>
-                      <p className="text-[#111813] dark:text-gray-300 text-sm font-normal leading-normal">
-                        {quickEstimate.homeEnergy} kWh
-                      </p>
-                    </div>
-                    <div className="flex h-4 w-full items-center gap-4">
-                      <input
-                        type="range"
-                        min="0"
-                        max="500"
-                        value={quickEstimate.homeEnergy}
-                        onChange={(e) => setQuickEstimate({ ...quickEstimate, homeEnergy: parseInt(e.target.value) })}
-                        className="flex-1 h-1 rounded-sm bg-[#dbe6df] dark:bg-gray-700 appearance-none cursor-pointer"
-                        style={{
-                          background: `linear-gradient(to right, #111813 0%, #111813 ${(quickEstimate.homeEnergy / 500) * 100}%, #dbe6df ${(quickEstimate.homeEnergy / 500) * 100}%, #dbe6df 100%)`
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleQuickEstimate}
-                    className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#f0f5f1] dark:bg-gray-700 text-[#111813] dark:text-white text-base font-bold leading-normal tracking-[0.015em]"
-                  >
-                    <span className="truncate">Estimate My Footprint</span>
-                  </button>
-                  <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                    Estimate based on latest{' '}
-                    <a href="#" className="underline text-primary">
-                      emission factors
-                    </a>
-                    .
-                  </p>
                 </div>
               </div>
             </div>

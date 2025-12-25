@@ -39,8 +39,16 @@ public class SecurityConfigEnhanced {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**", "/health", "/actuator/**").permitAll()
-                        // Protected endpoints
+                        .requestMatchers("/api/marketplace/**").permitAll()
+                        // Allow anonymous READ access to cart; writes require auth
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/cart/**").permitAll()
+                        // Public read-only catalog endpoints
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**").permitAll()
+                        // Carbon Interface API - authenticated users only (for survey)
+                        .requestMatchers("/api/carbon-interface/**").authenticated()
+                        // Protected endpoints - Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Everything else under /api requires authentication
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

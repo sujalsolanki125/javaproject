@@ -39,6 +39,26 @@ public class CarbonLog {
 
     private String description;
 
+    // Carbon Interface API integration fields
+    private String carbonInterfaceEstimateId;
+
+    @Column(name = "api_source")
+    private String apiSource = "static_calculation"; // 'carbon_interface' or 'static_calculation'
+
+    private String vehicleModelId;
+    private String vehicleMake;
+    private String vehicleModel;
+    private Integer vehicleYear;
+
+    @Column(columnDefinition = "JSON")
+    private String flightLegs;
+
+    private String electricityUnit;
+    private String countryCode;
+    private String stateCode;
+
+    private LocalDateTime apiCalculatedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

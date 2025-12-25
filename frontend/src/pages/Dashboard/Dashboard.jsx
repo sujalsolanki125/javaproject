@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
@@ -26,6 +26,12 @@ export default function Dashboard() {
     badges: []
   });
 
+  const formatEmission = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '0';
+    return numeric.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
   useEffect(() => {
     loadDashboardData();
     
@@ -50,19 +56,19 @@ export default function Dashboard() {
       if (stats) {
         setDashboardData({
           todayEmissions: {
-            value: stats.todayEmissions || 0,
+            value: formatEmission(stats.todayEmissions),
             change: stats.todayChange || '+0%',
             trend: stats.todayTrend || 'neutral',
             comparison: 'vs yesterday'
           },
           weeklyTrend: {
-            value: stats.weeklyEmissions || 0,
+            value: formatEmission(stats.weeklyEmissions),
             change: stats.weeklyChange || '0%',
             trend: stats.weeklyTrend || 'neutral',
             comparison: 'vs last week'
           },
           monthlyTotal: {
-            value: stats.monthlyEmissions || 0,
+            value: formatEmission(stats.monthlyEmissions),
             change: stats.goalStatus || 'On track',
             trend: stats.monthlyTrend || 'neutral',
             comparison: 'for goal'
@@ -70,25 +76,25 @@ export default function Dashboard() {
           categories: [
             { 
               name: 'Transport', 
-              value: stats.categoryBreakdown?.transportation || 0, 
+              value: formatEmission(stats.categoryBreakdown?.transportation), 
               icon: 'directions_car', 
               color: 'blue' 
             },
             { 
               name: 'Food', 
-              value: stats.categoryBreakdown?.diet || 0, 
+              value: formatEmission(stats.categoryBreakdown?.diet), 
               icon: 'restaurant', 
               color: 'orange' 
             },
             { 
               name: 'Energy', 
-              value: stats.categoryBreakdown?.energy || 0, 
+              value: formatEmission(stats.categoryBreakdown?.energy), 
               icon: 'bolt', 
               color: 'yellow' 
             },
             { 
               name: 'Other', 
-              value: stats.categoryBreakdown?.lifestyle || 0, 
+              value: formatEmission(stats.categoryBreakdown?.lifestyle), 
               icon: 'more_horiz', 
               color: 'purple' 
             }
@@ -107,7 +113,7 @@ export default function Dashboard() {
 
   const loadTrendData = async () => {
     try {
-      const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
+      const days = timeRange === 'day' ? 1 : timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 365;
       const data = await carbonService.getTrendData(days);
       setTrendData(data);
     } catch (err) {
@@ -174,18 +180,23 @@ export default function Dashboard() {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-text-main text-lg font-semibold leading-normal">Emissions Trend</h3>
-                  <p className="text-text-sub text-sm">Last 30 Days</p>
+                  <p className="text-text-sub text-sm">
+                    {timeRange === 'day' ? 'Today (Hourly)' : 
+                     timeRange === 'week' ? 'Last 7 Days' : 
+                     timeRange === 'month' ? 'Last 30 Days' : 
+                     'Last 365 Days'}
+                  </p>
                 </div>
                 <div className="flex gap-1 rounded-lg border border-gray-200 p-1 bg-white">
                   <button
-                    onClick={() => setTimeRange('month')}
+                    onClick={() => setTimeRange('day')}
                     className={`px-3 py-1 text-xs rounded-md font-medium ${
-                      timeRange === 'month'
+                      timeRange === 'day'
                         ? 'text-primary-dark bg-primary/10'
                         : 'text-gray-500 hover:bg-gray-100'
                     }`}
                   >
-                    Month
+                    Today
                   </button>
                   <button
                     onClick={() => setTimeRange('week')}
@@ -196,6 +207,16 @@ export default function Dashboard() {
                     }`}
                   >
                     Week
+                  </button>
+                  <button
+                    onClick={() => setTimeRange('month')}
+                    className={`px-3 py-1 text-xs rounded-md font-medium ${
+                      timeRange === 'month'
+                        ? 'text-primary-dark bg-primary/10'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    Month
                   </button>
                   <button
                     onClick={() => setTimeRange('year')}
@@ -247,52 +268,54 @@ export default function Dashboard() {
           </div>
 
           {/* Right Sidebar */}
-          <aside className="w-80 border-l border-gray-100 p-6 space-y-8 hidden lg:block bg-card-light/50">
-            {/* Goals Progress */}
-            <div>
-              <h3 className="text-text-main text-lg font-semibold leading-tight mb-4">Goals Progress</h3>
-              <div className="space-y-5">
-                {dashboardData.goals.map((goal, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="text-sm font-medium text-text-sub">{goal.title}</p>
-                      <p className="text-sm font-bold text-primary-dark">{goal.progress}%</p>
+          <aside className="w-96 border-l border-gray-100 p-8 hidden lg:block bg-background-light overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+            <div className="space-y-8">
+              {/* Goals Progress */}
+              <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h3 className="text-text-main text-base font-bold leading-tight mb-6">Goals Progress</h3>
+                <div className="space-y-6">
+                  {dashboardData.goals.map((goal, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm font-medium text-text-sub">{goal.title}</p>
+                        <p className="text-sm font-bold text-primary">{goal.progress}%</p>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                          className="bg-primary rounded-full h-2.5"
+                          style={{
+                            width: `${goal.progress}%`,
+                            boxShadow: '0 0 6px rgba(13,242,108,0.5)'
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary rounded-full h-2"
-                        style={{
-                          width: `${goal.progress}%`,
-                          boxShadow: '0 0 6px rgba(13,242,108,0.5)'
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Recent Badges */}
-            <div>
-              <h3 className="text-text-main text-lg font-semibold leading-tight mb-4">Recent Badges</h3>
-              <div className="grid grid-cols-3 gap-4">
-                {dashboardData.badges.map((badge, index) => (
-                  <div
-                    key={index}
-                    className={`flex flex-col items-center justify-center p-3 aspect-square rounded-xl ${
-                      badge.unlocked
-                        ? 'bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow'
-                        : 'bg-gray-100 border border-gray-200 text-gray-400'
-                    }`}
-                  >
-                    <span className={`material-symbols-outlined text-${badge.color} text-4xl ${
-                      badge.unlocked ? 'drop-shadow-sm' : ''
-                    }`}>
-                      {badge.icon}
-                    </span>
-                    <p className="text-xs text-center mt-1 font-medium">{badge.name}</p>
-                  </div>
-                ))}
+              {/* Recent Badges */}
+              <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h3 className="text-text-main text-base font-bold leading-tight mb-6">Recent Badges</h3>
+                <div className="grid grid-cols-3 gap-5">
+                  {dashboardData.badges.map((badge, index) => (
+                    <div
+                      key={index}
+                      className={`flex flex-col items-center justify-center p-4 aspect-square rounded-2xl transition-all ${
+                        badge.unlocked
+                          ? 'bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/30'
+                          : 'bg-gray-100 border border-gray-200 text-gray-400'
+                      }`}
+                    >
+                      <span className={`material-symbols-outlined text-5xl ${
+                        badge.unlocked ? 'text-yellow-500 drop-shadow-sm' : 'text-gray-300'
+                      }`}>
+                        {badge.icon}
+                      </span>
+                      <p className="text-xs text-center mt-2 font-semibold text-text-sub">{badge.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </aside>

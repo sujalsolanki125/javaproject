@@ -18,11 +18,12 @@ public class MarketplaceService {
     }
 
     public List<MarketplaceItem> getAvailableItems() {
-        return marketplaceItemRepository.findByIsActiveTrue();
+        // Only expose items that are linked to admin_product_catalog
+        return marketplaceItemRepository.findByIsActiveTrueAndAdminCatalogProductIdIsNotNull();
     }
 
     public List<MarketplaceItem> getItemsByCategory(String category) {
-        return marketplaceItemRepository.findByCategoryAndIsActiveTrue(category);
+        return marketplaceItemRepository.findByCategoryAndIsActiveTrueAndAdminCatalogProductIdIsNotNull(category);
     }
 
     public MarketplaceItem getItemById(Long id) {

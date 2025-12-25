@@ -4,6 +4,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,56 +21,58 @@ import java.util.Map;
 @EnableCaching
 public class RedisConfig {
 
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
+        @Bean
+        public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+                RedisTemplate<String, Object> template = new RedisTemplate<>();
+                template.setConnectionFactory(connectionFactory);
 
-        // Use String serializer for keys
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
+                // Use String serializer for keys
+                template.setKeySerializer(new StringRedisSerializer());
+                template.setHashKeySerializer(new StringRedisSerializer());
 
-        // Use JSON serializer for values
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+                // Use JSON serializer for values
+                template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+                template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        template.afterPropertiesSet();
-        return template;
-    }
+                template.afterPropertiesSet();
+                return template;
+        }
 
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // Default cache configuration
-        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))
-                .serializeKeysWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()))
-                .disableCachingNullValues();
+        @Bean
+        @Primary
+        public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+                // Default cache configuration
+                RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.ofHours(1))
+                                .serializeKeysWith(
+                                                RedisSerializationContext.SerializationPair
+                                                                .fromSerializer(new StringRedisSerializer()))
+                                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                                                .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                                .disableCachingNullValues();
 
-        // Custom cache configurations with different TTLs
-        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+                // Custom cache configurations with different TTLs
+                Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
-        // Dashboard stats - 5 minutes
-        cacheConfigurations.put("dashboardStats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+                // Dashboard stats - 5 minutes
+                cacheConfigurations.put("dashboardStats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
 
-        // User profiles - 30 minutes
-        cacheConfigurations.put("userProfiles", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+                // User profiles - 30 minutes
+                cacheConfigurations.put("userProfiles", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
-        // External API responses - 1 hour
-        cacheConfigurations.put("externalApi", defaultConfig.entryTtl(Duration.ofHours(1)));
+                // External API responses - 1 hour
+                cacheConfigurations.put("externalApi", defaultConfig.entryTtl(Duration.ofHours(1)));
 
-        // Carbon logs - 15 minutes
-        cacheConfigurations.put("carbonLogs", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+                // Carbon logs - 15 minutes
+                cacheConfigurations.put("carbonLogs", defaultConfig.entryTtl(Duration.ofMinutes(15)));
 
-        // Analytics reports - 24 hours
-        cacheConfigurations.put("analyticsReports", defaultConfig.entryTtl(Duration.ofHours(24)));
+                // Analytics reports - 24 hours
+                cacheConfigurations.put("analyticsReports", defaultConfig.entryTtl(Duration.ofHours(24)));
 
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(defaultConfig)
-                .withInitialCacheConfigurations(cacheConfigurations)
-                .transactionAware()
-                .build();
-    }
+                return RedisCacheManager.builder(connectionFactory)
+                                .cacheDefaults(defaultConfig)
+                                .withInitialCacheConfigurations(cacheConfigurations)
+                                .transactionAware()
+                                .build();
+        }
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { carbonService } from '../../services/carbon.service';
+import { Sidebar } from '../../components/layout/Sidebar';
+import VehicleSelector from '../../components/forms/VehicleSelector';
+import ApiDiagnostics from '../../components/diagnostic/ApiDiagnostics';
 
 export default function SurveyForm() {
   const navigate = useNavigate();
@@ -10,15 +13,19 @@ export default function SurveyForm() {
   const [formData, setFormData] = useState({
     // Step 1: Transportation
     transportMode: '',
+    vehicleInfo: null, // New: Carbon Interface vehicle data
     commuteFrequency: '',
     commuteDistance: 50,
     shortHaulFlights: 0,
     longHaulFlights: 0,
+    flightLegs: [], // New: Flight leg data for API
     // Step 2: Diet
     dietType: 'vegetarian',
     // Step 3: Energy
     electricityUsage: '',
     electricityUnit: 'kWh',
+    countryCode: 'us', // New: Country for API
+    stateCode: '', // New: State for API
     naturalGasUsage: '',
     naturalGasUnit: 'therms',
     heatingOilUsage: '',
@@ -29,21 +36,60 @@ export default function SurveyForm() {
     compostFood: false,
     unplugElectronics: false,
     buyLocalProduce: false,
-    // Step 5 will be added later
+    // Step 5: API Integration flags
+    useRealTimeData: true, // New: Toggle for API vs static calculations
   });
 
   const totalSteps = 5;
   const progress = (currentStep / totalSteps) * 100;
+
+  const formatKg = (value = 0) => {
+    const numeric = Number(value) || 0;
+    return numeric.toLocaleString(undefined, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: numeric > 0 && numeric < 1 ? 2 : 0
+    });
+  };
+
+  const isStepValid = (step) => {
+    switch (step) {
+      case 1:
+        const requiresVehicle = formData.transportMode === 'car' || formData.transportMode === 'ev';
+        return Boolean(
+          formData.transportMode &&
+          formData.commuteFrequency &&
+          formData.commuteDistance >= 0 &&
+          (!requiresVehicle || formData.vehicleInfo?.modelId)
+        );
+      case 2:
+        return Boolean(formData.dietType);
+      case 3:
+      case 4:
+        return true; // optional inputs
+      case 5:
+        return true;
+      default:
+        return true;
+    }
+  };
+  const isNextDisabled = loading || !isStepValid(currentStep);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleNext = () => {
+    if (!isStepValid(currentStep)) {
+      setError('Please complete the required fields before continuing.');
+      return;
+    }
+
+    setError('');
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // Submit survey
       handleSubmit();
     }
   };
@@ -61,29 +107,19 @@ export default function SurveyForm() {
     setError('');
     
     try {
-      // Calculate carbon footprint
-      const footprintResult = carbonService.calculateFootprint(formData);
-      
-      // Submit survey and create carbon log
+      // Submit survey raw data; backend will call Carbon Interface and calculate
       const logData = {
         date: new Date().toISOString(),
-        totalEmissions: parseFloat(footprintResult.totalEmissions),
-        breakdown: {
-          transportation: parseFloat(footprintResult.breakdown.transportation),
-          diet: parseFloat(footprintResult.breakdown.diet),
-          energy: parseFloat(footprintResult.breakdown.energy),
-          lifestyle: parseFloat(footprintResult.breakdown.lifestyle)
-        },
         surveyData: formData
       };
-      
+
       await carbonService.submitSurvey(logData);
       
       // Show success message and navigate
       navigate('/dashboard', { 
         state: { 
-          message: 'Survey submitted successfully! Your carbon footprint has been calculated.',
-          footprint: footprintResult
+          message: 'Survey submitted successfully! Your carbon footprint is being calculated.',
+          footprint: null
         } 
       });
     } catch (err) {
@@ -103,25 +139,27 @@ export default function SurveyForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center bg-background-light dark:bg-background-dark">
-      {/* Top Nav Bar */}
-      <header className="flex w-full max-w-5xl items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-4 py-4 md:px-10">
-        <div className="flex items-center gap-4 text-slate-900 dark:text-white">
-          <div className="h-8 w-8 text-primary">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
-            </svg>
+    <div className="flex h-screen w-full">
+      <Sidebar />
+      <div className="relative flex min-h-screen w-full flex-col items-center bg-background-light dark:bg-background-dark">
+        {/* Top Nav Bar */}
+        <header className="flex w-full max-w-5xl items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-4 py-4 md:px-10">
+          <div className="flex items-center gap-4 text-slate-900 dark:text-white">
+            <div className="h-8 w-8 text-primary">
+              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold tracking-tight">Carbon Footprint Tracker</h2>
           </div>
-          <h2 className="text-lg font-bold tracking-tight">Carbon Footprint Tracker</h2>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <span className="material-symbols-outlined text-base">check_circle</span>
-          <span>Progress saved</span>
-        </div>
-      </header>
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            <span>Progress saved</span>
+          </div>
+        </header>
 
-      <main className="w-full max-w-3xl flex-1 px-4 py-8 sm:py-12">
-        <div className="flex flex-col gap-10">
+        <main className="w-full max-w-3xl flex-1 px-4 py-8 sm:py-12">
+          <div className="flex flex-col gap-10">
           {/* Progress Bar */}
           <div className="flex flex-col gap-3">
             <div className="flex justify-between">
@@ -136,6 +174,12 @@ export default function SurveyForm() {
               />
             </div>
           </div>
+
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+              {error}
+            </div>
+          )}
 
           {/* Step 1: Transportation */}
           {currentStep === 1 && (
@@ -156,7 +200,7 @@ export default function SurveyForm() {
                   <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Commute Information
                   </h2>
-                  <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Primary mode of transport */}
                     <label className="flex flex-col col-span-2 md:col-span-1">
                       <span className="text-sm font-medium text-slate-700 dark:text-slate-300 pb-2">
@@ -176,6 +220,16 @@ export default function SurveyForm() {
                         <option value="walk">Walk</option>
                       </select>
                     </label>
+
+                    {/* Vehicle selection (required for car/EV) */}
+                    {(formData.transportMode === 'car' || formData.transportMode === 'ev') && (
+                      <div className="col-span-2">
+                        <VehicleSelector
+                          value={formData.vehicleInfo}
+                          onChange={(value) => handleInputChange('vehicleInfo', value)}
+                        />
+                      </div>
+                    )}
 
                     {/* Daily commute frequency */}
                     <label className="flex flex-col col-span-2 md:col-span-1">
@@ -655,6 +709,15 @@ export default function SurveyForm() {
                 </div>
               </div>
 
+              {/* Footprint Preview (calculated server-side via Carbon Interface after submit) */}
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-primary/5 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-800">
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-primary">Carbon Interface Powered</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">Your footprint will be calculated after submission using Carbon Interface APIs.</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">We’ll fetch verified emissions for your vehicle, electricity, and flights directly from Carbon Interface, then store them in your logs and dashboard.</p>
+                </div>
+              </div>
+
               {/* Accordions */}
               <div className="flex flex-col gap-3">
                 {/* Home & Energy Accordion */}
@@ -866,13 +929,24 @@ export default function SurveyForm() {
             </button>
             <button
               onClick={handleNext}
-              className="rounded-full bg-primary px-8 py-3 text-sm font-bold text-slate-900 hover:bg-primary/80"
+              disabled={isNextDisabled}
+              className={`rounded-full px-8 py-3 text-sm font-bold text-slate-900 transition-colors ${
+                isNextDisabled
+                  ? 'bg-primary/40 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/80'
+              }`}
             >
-              {currentStep === totalSteps ? 'Submit My Survey' : 'Next Step'}
+              {loading && currentStep === totalSteps
+                ? 'Submitting...'
+                : currentStep === totalSteps
+                  ? 'Submit My Survey'
+                  : 'Next Step'}
             </button>
           </div>
         </div>
       </main>
+      <ApiDiagnostics />
     </div>
+  </div>
   );
 }

@@ -49,6 +49,66 @@ const carbonService = {
     return response.data;
   },
 
+  // Carbon Interface API Integration
+  testCarbonInterfaceAuth: async () => {
+    const response = await api.get('/api/carbon-interface/auth/test');
+    return response.data;
+  },
+
+  getVehicleMakes: async () => {
+    const response = await api.get('/api/carbon-interface/vehicles/makes');
+    return response.data;
+  },
+
+  getVehicleModels: async (makeId) => {
+    const response = await api.get(`/api/carbon-interface/vehicles/makes/${makeId}/models`);
+    return response.data;
+  },
+
+  calculateElectricityEmissions: async (kwh, country, state = null) => {
+    const response = await api.post('/api/carbon-interface/estimate/electricity', {
+      kwh, country, state
+    });
+    return response.data;
+  },
+
+  calculateVehicleEmissions: async (distanceMiles, vehicleModelId) => {
+    const response = await api.post('/api/carbon-interface/estimate/vehicle', {
+      distance_miles: distanceMiles,
+      vehicle_model_id: vehicleModelId
+    });
+    return response.data;
+  },
+
+  calculateFlightEmissions: async (passengers, legs, distanceUnit = 'km') => {
+    const response = await api.post('/api/carbon-interface/estimate/flight', {
+      passengers,
+      legs,
+      distance_unit: distanceUnit
+    });
+    return response.data;
+  },
+
+  calculateShippingEmissions: async (weightValue, weightUnit, distanceValue, distanceUnit, transportMethod) => {
+    const response = await api.post('/api/carbon-interface/estimate/shipping', {
+      weight_value: weightValue,
+      weight_unit: weightUnit,
+      distance_value: distanceValue,
+      distance_unit: distanceUnit,
+      transport_method: transportMethod
+    });
+    return response.data;
+  },
+
+  calculateFuelEmissions: async (fuelSourceType, fuelSourceUnit, fuelSourceValue) => {
+    const response = await api.post('/api/carbon-interface/estimate/fuel', {
+      fuel_source_type: fuelSourceType,
+      fuel_source_unit: fuelSourceUnit,
+      fuel_source_value: fuelSourceValue
+    });
+    return response.data;
+  },
+
   // Survey submission - creates carbon log from survey data
   submitSurvey: async (surveyData) => {
     const response = await api.post('/api/carbon-logs/from-survey', surveyData);
@@ -70,8 +130,14 @@ const carbonService = {
   },
 
   // Calculate carbon footprint from survey
-  calculateFootprint: (surveyData) => {
-    let totalEmissions = 0;
+  calculateFootprint: (surveyData = {}) => {
+    const toNumber = (value) => {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const round = (value) => Number((value || 0).toFixed(2));
+
     const breakdown = {
       transportation: 0,
       diet: 0,
@@ -79,84 +145,84 @@ const carbonService = {
       lifestyle: 0
     };
 
-    // Transportation calculations (kg CO2e per year)
-    if (surveyData.transportMode) {
-      const transportEmissions = {
-        'car': 4600,
-        'public_transport': 1200,
-        'bike': 0,
-        'walk': 0,
-        'motorcycle': 2800
-      };
-      const baseEmission = transportEmissions[surveyData.transportMode] || 0;
-      
-      // Adjust based on commute frequency
-      const frequencyMultiplier = {
-        'daily': 1.0,
-        'weekly': 0.4,
-        'monthly': 0.1,
-        'rarely': 0.05
-      };
-      const freqMult = frequencyMultiplier[surveyData.commuteFrequency] || 0.5;
-      
-      // Distance factor (normalized to 50km baseline)
-      const distanceFactor = surveyData.commuteDistance / 50;
-      
-      breakdown.transportation = baseEmission * freqMult * distanceFactor;
-    }
-
-    // Flight emissions
-    breakdown.transportation += (surveyData.shortHaulFlights || 0) * 300; // 300 kg per short flight
-    breakdown.transportation += (surveyData.longHaulFlights || 0) * 1200; // 1200 kg per long flight
-
-    // Diet calculations (kg CO2e per year)
-    const dietEmissions = {
-      'vegan': 1500,
-      'vegetarian': 1700,
-      'pescatarian': 1900,
-      'omnivore': 2500
+    // Transportation (commute + flights)
+    const transportFactors = {
+      car: 0.192, // kg CO2e per km
+      ev: 0.053,
+      bus: 0.105,
+      train: 0.041,
+      bicycle: 0,
+      walk: 0
     };
-    breakdown.diet = dietEmissions[surveyData.dietType] || 2000;
 
-    // Energy calculations (kg CO2e)
-    if (surveyData.electricityUsage) {
-      const electricity = parseFloat(surveyData.electricityUsage) || 0;
-      // 0.92 lbs CO2 per kWh = 0.417 kg per kWh
-      breakdown.energy += electricity * 0.417;
-    }
-    
-    if (surveyData.naturalGasUsage) {
-      const gas = parseFloat(surveyData.naturalGasUsage) || 0;
-      // 11.7 lbs CO2 per therm = 5.3 kg per therm
-      breakdown.energy += gas * 5.3;
-    }
-    
-    if (surveyData.heatingOilUsage) {
-      const oil = parseFloat(surveyData.heatingOilUsage) || 0;
-      // 22.4 lbs CO2 per gallon = 10.16 kg per gallon
-      breakdown.energy += oil * 10.16;
+    const frequencyFactors = {
+      '5-days': 1,
+      '3-days': 0.6,
+      '1-day': 0.2,
+      'rarely': 0.05
+    };
+
+    const weeklyKm = toNumber(surveyData.commuteDistance);
+    const frequencyFactor = frequencyFactors[surveyData.commuteFrequency] ?? 1;
+    const annualKm = weeklyKm * 52 * frequencyFactor;
+    const kgPerKm = transportFactors[surveyData.transportMode] ?? transportFactors.car;
+    let transportation = annualKm * kgPerKm;
+
+    const shortFlights = toNumber(surveyData.shortHaulFlights);
+    const longFlights = toNumber(surveyData.longHaulFlights);
+    transportation += shortFlights * 250 + longFlights * 1100;
+    breakdown.transportation = transportation;
+
+    // Diet (annual kg CO2e)
+    const dietProfiles = {
+      vegan: 1000,
+      vegetarian: 1200,
+      pescatarian: 1500,
+      omnivore: 2500
+    };
+    breakdown.diet = dietProfiles[surveyData.dietType] ?? 1700;
+
+    // Energy (annual)
+    const monthlyElectricity = toNumber(surveyData.electricityUsage);
+    const annualElectricity = monthlyElectricity * 12;
+    let energy = annualElectricity * 0.417; // kg CO2e per kWh
+
+    const naturalGasUsage = toNumber(surveyData.naturalGasUsage);
+    if (naturalGasUsage > 0) {
+      const gasFactor = surveyData.naturalGasUnit === 'cubic feet (CCF)' ? 5.3 * 1.037 : 5.3;
+      energy += naturalGasUsage * gasFactor;
     }
 
-    // Lifestyle/habits (reduction factors)
-    let lifestyleReduction = 0;
-    if (surveyData.useReusableBags) lifestyleReduction += 10;
-    if (surveyData.recycleWaste) lifestyleReduction += 50;
-    if (surveyData.compostFood) lifestyleReduction += 30;
-    if (surveyData.unplugElectronics) lifestyleReduction += 20;
-    if (surveyData.buyLocalProduce) lifestyleReduction += 40;
-    
-    breakdown.lifestyle = -lifestyleReduction; // Negative = reduction
+    const heatingOilUsage = toNumber(surveyData.heatingOilUsage);
+    if (heatingOilUsage > 0) {
+      energy += heatingOilUsage * 10.16;
+    }
+    breakdown.energy = energy;
 
-    // Calculate total
-    totalEmissions = breakdown.transportation + breakdown.diet + breakdown.energy + breakdown.lifestyle;
+    // Lifestyle savings (negative impact reduces footprint)
+    const habitSavings = {
+      useReusableBags: 15,
+      recycleWaste: 60,
+      compostFood: 45,
+      unplugElectronics: 25,
+      buyLocalProduce: 35
+    };
+
+    let lifestyleImpact = 0;
+    Object.entries(habitSavings).forEach(([habit, savings]) => {
+      if (surveyData[habit]) lifestyleImpact -= savings;
+    });
+    breakdown.lifestyle = lifestyleImpact;
+
+    const totalEmissions = Math.max(0, breakdown.transportation + breakdown.diet + breakdown.energy + breakdown.lifestyle);
 
     return {
-      totalEmissions: Math.max(0, totalEmissions).toFixed(2),
+      totalEmissions: round(totalEmissions),
       breakdown: {
-        transportation: breakdown.transportation.toFixed(2),
-        diet: breakdown.diet.toFixed(2),
-        energy: breakdown.energy.toFixed(2),
-        lifestyle: breakdown.lifestyle.toFixed(2)
+        transportation: round(breakdown.transportation),
+        diet: round(breakdown.diet),
+        energy: round(breakdown.energy),
+        lifestyle: round(breakdown.lifestyle)
       }
     };
   }

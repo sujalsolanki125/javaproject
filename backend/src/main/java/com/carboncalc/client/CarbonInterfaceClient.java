@@ -1,21 +1,28 @@
 package com.carboncalc.client;
 
+import com.carboncalc.dto.carbon.CarbonEstimateResponse;
+import com.carboncalc.dto.carbon.VehicleMakeResponse;
+import com.carboncalc.dto.carbon.VehicleModelResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Client for Carbon Interface API
  * Fetches real carbon emission data for various activities
- * API Docs: https://www.carboninterface.com/docs
+ * API Docs: https://docs.carboninterface.com/
  */
 @Slf4j
 @Service
@@ -31,39 +38,99 @@ public class CarbonInterfaceClient {
     private final WebClient webClient;
 
     /**
-     * Estimate emissions for electricity usage
+     * Test API authentication
      * 
-     * @param kwh     Kilowatt-hours consumed
-     * @param country Country code (e.g., "US", "GB")
-     * @return Emissions in kg CO2e
+     * @return true if authentication is successful
      */
-    @Cacheable(value = "externalApi", key = "'electricity_' + #kwh + '_' + #country")
-    public Double estimateElectricityEmissions(Double kwh, String country) {
+    public boolean testAuth() {
         try {
-            log.info("Fetching electricity emissions: {}kWh in {}", kwh, country);
+            log.info("Testing Carbon Interface API authentication");
 
-            Map<String, Object> request = Map.of(
-                    "type", "electricity",
-                    "electricity_unit", "kwh",
-                    "electricity_value", kwh,
-                    "country", country);
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                log.error("Carbon Interface API key is not configured");
+                return false;
+            }
 
-            Map<String, Object> response = webClient.post()
-                    .uri(baseUrl + "/estimates")
+            Map<String, String> response = webClient.get()
+                    .uri(baseUrl + "/auth")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .bodyValue(request)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofSeconds(10))
                     .block();
 
-            if (response != null && response.containsKey("data")) {
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                Map<String, Object> attributes = (Map<String, Object>) data.get("attributes");
-                return (Double) attributes.get("carbon_kg");
+            if (response != null && "auth successful".equals(response.get("message"))) {
+                log.info("Carbon Interface API authentication successful");
+                return true;
             }
 
-            log.warn("No emission data returned from Carbon Interface API");
+            log.warn("Carbon Interface API authentication failed: {}", response);
+            return false;
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.error("Carbon Interface API key is invalid");
+            } else {
+                log.error("Error testing Carbon Interface API auth: {} - {}", e.getStatusCode(), e.getMessage());
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("Error testing Carbon Interface API auth: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Estimate emissions for electricity usage
+     * 
+     * @param kwh     Kilowatt-hours consumed
+     * @param country Country code (e.g., "US", "GB")
+     * @param state   Optional state code for more accurate estimates (e.g., "CA",
+     *                "FL")
+     * @return Emissions in kg CO2e
+     */
+    @Cacheable(value = "externalApi", key = "'electricity_' + #kwh + '_' + #country + '_' + (#state ?: 'none')")
+    public Double estimateElectricityEmissions(Double kwh, String country, String state) {
+        try {
+            log.info("Fetching electricity emissions: {}kWh in {}{}", kwh, country,
+                    state != null ? "-" + state : "");
+
+            Map<String, Object> request = Map.of(
+                    "type", "electricity",
+                    "electricity_unit", "kwh",
+                    "electricity_value", kwh,
+                    "country", country.toLowerCase());
+
+            // Add state if provided
+            if (state != null && !state.trim().isEmpty()) {
+                request = Map.of(
+                        "type", "electricity",
+                        "electricity_unit", "kwh",
+                        "electricity_value", kwh,
+                        "country", country.toLowerCase(),
+                        "state", state.toLowerCase());
+            }
+
+            CarbonEstimateResponse response = webClient.post()
+                    .uri(baseUrl + "/estimates")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response != null && response.getData() != null && response.getData().getAttributes() != null) {
+                Double carbonKg = response.getData().getAttributes().getCarbonKg();
+                log.info("Successfully fetched electricity emissions: {} kg CO2e", carbonKg);
+                return carbonKg;
+            }
+
+            log.warn("No emission data returned from Carbon Interface API for electricity");
+            return null;
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching electricity emissions: {} - {}", e.getStatusCode(),
+                    e.getResponseBodyAsString());
             return null;
         } catch (Exception e) {
             log.error("Error fetching electricity emissions: {}", e.getMessage());
@@ -72,38 +139,138 @@ public class CarbonInterfaceClient {
     }
 
     /**
+     * Overloaded method for backward compatibility
+     */
+    @Cacheable(value = "externalApi", key = "'electricity_' + #kwh + '_' + #country")
+    public Double estimateElectricityEmissions(Double kwh, String country) {
+        return estimateElectricityEmissions(kwh, country, null);
+    }
+
+    /**
+     * Get all available vehicle makes
+     * 
+     * @return List of vehicle makes with their IDs and model counts
+     */
+    @Cacheable(value = "externalApi", key = "'vehicle_makes'", cacheManager = "longTermCacheManager")
+    public List<VehicleMakeResponse.VehicleMakeData> getVehicleMakes() {
+        try {
+            log.info("Fetching vehicle makes from Carbon Interface API");
+
+            // Carbon Interface returns an array of wrapper objects, each containing a "data" field
+            VehicleMakeWrapper[] responseArray = webClient.get()
+                    .uri(baseUrl + "/vehicle_makes")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .retrieve()
+                    .bodyToMono(VehicleMakeWrapper[].class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (responseArray != null && responseArray.length > 0) {
+                List<VehicleMakeResponse.VehicleMakeData> makes = new ArrayList<>();
+                for (VehicleMakeWrapper wrapper : responseArray) {
+                    if (wrapper.getData() != null) {
+                        makes.add(wrapper.getData());
+                    }
+                }
+                log.info("Successfully fetched {} vehicle makes", makes.size());
+                return makes;
+            }
+
+            log.warn("No vehicle makes data returned from Carbon Interface API");
+            return List.of();
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching vehicle makes: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return List.of();
+        } catch (Exception e) {
+            log.error("Error fetching vehicle makes: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Get vehicle models for a specific make
+     * 
+     * @param vehicleMakeId The ID of the vehicle make
+     * @return List of vehicle models for the specified make
+     */
+    @Cacheable(value = "externalApi", key = "'vehicle_models_' + #vehicleMakeId", cacheManager = "longTermCacheManager")
+    public List<VehicleModelResponse.VehicleModelData> getVehicleModels(String vehicleMakeId) {
+        try {
+            log.info("Fetching vehicle models for make ID: {}", vehicleMakeId);
+
+            // Carbon Interface returns an array of wrapper objects, each containing a "data" field
+            VehicleModelWrapper[] responseArray = webClient.get()
+                    .uri(baseUrl + "/vehicle_makes/" + vehicleMakeId + "/vehicle_models")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .retrieve()
+                    .bodyToMono(VehicleModelWrapper[].class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (responseArray != null && responseArray.length > 0) {
+                List<VehicleModelResponse.VehicleModelData> models = new ArrayList<>();
+                for (VehicleModelWrapper wrapper : responseArray) {
+                    if (wrapper.getData() != null) {
+                        models.add(wrapper.getData());
+                    }
+                }
+                log.info("Successfully fetched {} vehicle models for make ID: {}", models.size(),
+                        vehicleMakeId);
+                return models;
+            }
+
+            log.warn("No vehicle models data returned from Carbon Interface API for make ID: {}", vehicleMakeId);
+            return List.of();
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching vehicle models for make {}: {} - {}", vehicleMakeId, e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            return List.of();
+        } catch (Exception e) {
+            log.error("Error fetching vehicle models for make {}: {}", vehicleMakeId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
      * Estimate emissions for vehicle travel
      * 
-     * @param distanceMiles Distance traveled in miles
-     * @param vehicleModel  Vehicle model (e.g., "2020 Toyota Camry")
+     * @param distanceMiles  Distance traveled in miles
+     * @param vehicleModelId Vehicle model ID from Carbon Interface API
      * @return Emissions in kg CO2e
      */
-    @Cacheable(value = "externalApi", key = "'vehicle_' + #distanceMiles + '_' + #vehicleModel")
-    public Double estimateVehicleEmissions(Double distanceMiles, String vehicleModel) {
+    @Cacheable(value = "externalApi", key = "'vehicle_' + #distanceMiles + '_' + #vehicleModelId")
+    public Double estimateVehicleEmissions(Double distanceMiles, String vehicleModelId) {
         try {
-            log.info("Fetching vehicle emissions: {} miles in {}", distanceMiles, vehicleModel);
+            log.info("Fetching vehicle emissions: {} miles with model ID: {}", distanceMiles, vehicleModelId);
 
             Map<String, Object> request = Map.of(
                     "type", "vehicle",
                     "distance_unit", "mi",
                     "distance_value", distanceMiles,
-                    "vehicle_model_id", vehicleModel);
+                    "vehicle_model_id", vehicleModelId);
 
-            Map<String, Object> response = webClient.post()
+            CarbonEstimateResponse response = webClient.post()
                     .uri(baseUrl + "/estimates")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(10))
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
                     .block();
 
-            if (response != null && response.containsKey("data")) {
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                Map<String, Object> attributes = (Map<String, Object>) data.get("attributes");
-                return (Double) attributes.get("carbon_kg");
+            if (response != null && response.getData() != null && response.getData().getAttributes() != null) {
+                Double carbonKg = response.getData().getAttributes().getCarbonKg();
+                log.info("Successfully fetched vehicle emissions: {} kg CO2e for {} miles", carbonKg, distanceMiles);
+                return carbonKg;
             }
 
+            log.warn("No emission data returned from Carbon Interface API for vehicle");
+            return null;
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching vehicle emissions: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             return null;
         } catch (Exception e) {
             log.error("Error fetching vehicle emissions: {}", e.getMessage());
@@ -114,43 +281,231 @@ public class CarbonInterfaceClient {
     /**
      * Estimate emissions for flight
      * 
-     * @param distanceMiles Flight distance in miles
-     * @param passengers    Number of passengers
+     * @param legs         List of flight legs with departure and destination
+     *                     airports
+     * @param passengers   Number of passengers
+     * @param distanceUnit Optional distance unit ("mi" or "km", defaults to "km")
      * @return Emissions in kg CO2e
      */
-    @Cacheable(value = "externalApi", key = "'flight_' + #distanceMiles + '_' + #passengers")
-    public Double estimateFlightEmissions(Double distanceMiles, Integer passengers) {
+    @Cacheable(value = "externalApi", key = "'flight_' + #legs.hashCode() + '_' + #passengers + '_' + (#distanceUnit ?: 'km')")
+    public Double estimateFlightEmissions(List<Map<String, String>> legs, Integer passengers, String distanceUnit) {
         try {
-            log.info("Fetching flight emissions: {} miles for {} passengers", distanceMiles, passengers);
+            log.info("Fetching flight emissions: {} passengers, {} legs", passengers, legs.size());
 
             Map<String, Object> request = Map.of(
                     "type", "flight",
                     "passengers", passengers,
-                    "legs", new Object[] {
-                            Map.of(
-                                    "departure_airport", "sfo",
-                                    "destination_airport", "jfk")
-                    });
+                    "legs", legs);
 
-            Map<String, Object> response = webClient.post()
-                    .uri(baseUrl + "/estimates")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();
-
-            if (response != null && response.containsKey("data")) {
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                Map<String, Object> attributes = (Map<String, Object>) data.get("attributes");
-                return (Double) attributes.get("carbon_kg");
+            if (distanceUnit != null && !distanceUnit.trim().isEmpty()) {
+                request = Map.of(
+                        "type", "flight",
+                        "passengers", passengers,
+                        "legs", legs,
+                        "distance_unit", distanceUnit.toLowerCase());
             }
 
+            CarbonEstimateResponse response = webClient.post()
+                    .uri(baseUrl + "/estimates")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response != null && response.getData() != null && response.getData().getAttributes() != null) {
+                Double carbonKg = response.getData().getAttributes().getCarbonKg();
+                log.info("Successfully fetched flight emissions: {} kg CO2e for {} passengers", carbonKg, passengers);
+                return carbonKg;
+            }
+
+            log.warn("No emission data returned from Carbon Interface API for flight");
+            return null;
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching flight emissions: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             return null;
         } catch (Exception e) {
             log.error("Error fetching flight emissions: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Simplified flight emissions for distance-based estimates (backward
+     * compatibility)
+     */
+    @Cacheable(value = "externalApi", key = "'flight_simple_' + #distanceMiles + '_' + #passengers")
+    public Double estimateFlightEmissions(Double distanceMiles, Integer passengers) {
+        // For simplicity, create a round trip flight legs based on distance
+        // This is an approximation - real implementation should use actual airport
+        // codes
+        List<Map<String, String>> legs = List.of(
+                Map.of("departure_airport", "JFK", "destination_airport", "LAX"),
+                Map.of("departure_airport", "LAX", "destination_airport", "JFK"));
+
+        return estimateFlightEmissions(legs, passengers, "mi");
+    }
+
+    /**
+     * Estimate emissions for shipping
+     * 
+     * @param weightValue     Weight of the shipment
+     * @param weightUnit      Weight unit ("g", "lb", "kg", "mt")
+     * @param distanceValue   Distance traveled
+     * @param distanceUnit    Distance unit ("mi", "km")
+     * @param transportMethod Transport method ("ship", "train", "truck", "plane")
+     * @return Emissions in kg CO2e
+     */
+    @Cacheable(value = "externalApi", key = "'shipping_' + #weightValue + '_' + #weightUnit + '_' + #distanceValue + '_' + #distanceUnit + '_' + #transportMethod")
+    public Double estimateShippingEmissions(Double weightValue, String weightUnit, Double distanceValue,
+            String distanceUnit, String transportMethod) {
+        try {
+            log.info("Fetching shipping emissions: {}{}  via {} for {} {}",
+                    weightValue, weightUnit, transportMethod, distanceValue, distanceUnit);
+
+            Map<String, Object> request = Map.of(
+                    "type", "shipping",
+                    "weight_value", weightValue,
+                    "weight_unit", weightUnit.toLowerCase(),
+                    "distance_value", distanceValue,
+                    "distance_unit", distanceUnit.toLowerCase(),
+                    "transport_method", transportMethod.toLowerCase());
+
+            CarbonEstimateResponse response = webClient.post()
+                    .uri(baseUrl + "/estimates")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response != null && response.getData() != null && response.getData().getAttributes() != null) {
+                Double carbonKg = response.getData().getAttributes().getCarbonKg();
+                log.info("Successfully fetched shipping emissions: {} kg CO2e", carbonKg);
+                return carbonKg;
+            }
+
+            log.warn("No emission data returned from Carbon Interface API for shipping");
+            return null;
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching shipping emissions: {} - {}", e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching shipping emissions: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Estimate emissions for fuel combustion
+     * 
+     * @param fuelSourceType  Type of fuel source (e.g., "dfo" for diesel fuel oil)
+     * @param fuelSourceUnit  Unit of fuel measurement (e.g., "btu", "gallon")
+     * @param fuelSourceValue Amount of fuel consumed
+     * @return Emissions in kg CO2e
+     */
+    @Cacheable(value = "externalApi", key = "'fuel_' + #fuelSourceType + '_' + #fuelSourceUnit + '_' + #fuelSourceValue")
+    public Double estimateFuelCombustionEmissions(String fuelSourceType, String fuelSourceUnit,
+            Double fuelSourceValue) {
+        try {
+            log.info("Fetching fuel combustion emissions: {} {} of {}",
+                    fuelSourceValue, fuelSourceUnit, fuelSourceType);
+
+            Map<String, Object> request = Map.of(
+                    "type", "fuel_combustion",
+                    "fuel_source_type", fuelSourceType.toLowerCase(),
+                    "fuel_source_unit", fuelSourceUnit.toLowerCase(),
+                    "fuel_source_value", fuelSourceValue);
+
+            CarbonEstimateResponse response = webClient.post()
+                    .uri(baseUrl + "/estimates")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response != null && response.getData() != null && response.getData().getAttributes() != null) {
+                Double carbonKg = response.getData().getAttributes().getCarbonKg();
+                log.info("Successfully fetched fuel combustion emissions: {} kg CO2e", carbonKg);
+                return carbonKg;
+            }
+
+            log.warn("No emission data returned from Carbon Interface API for fuel combustion");
+            return null;
+        } catch (WebClientResponseException e) {
+            log.error("HTTP error fetching fuel combustion emissions: {} - {}", e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching fuel combustion emissions: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get a specific estimate by ID
+     * 
+     * @param estimateId The ID of the estimate to retrieve
+     * @return CarbonEstimateResponse or null if not found
+     */
+    @Cacheable(value = "externalApi", key = "'estimate_' + #estimateId")
+    public CarbonEstimateResponse getEstimate(String estimateId) {
+        try {
+            log.info("Fetching estimate by ID: {}", estimateId);
+
+            CarbonEstimateResponse response = webClient.get()
+                    .uri(baseUrl + "/estimates/" + estimateId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .retrieve()
+                    .bodyToMono(CarbonEstimateResponse.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response != null && response.getData() != null) {
+                log.info("Successfully fetched estimate: {}", estimateId);
+                return response;
+            }
+
+            log.warn("No estimate data returned for ID: {}", estimateId);
+            return null;
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.warn("Estimate not found: {}", estimateId);
+            } else {
+                log.error("HTTP error fetching estimate {}: {} - {}", estimateId, e.getStatusCode(),
+                        e.getResponseBodyAsString());
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching estimate {}: {}", estimateId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Wrapper class for Carbon Interface API vehicle makes response
+     * The API returns an array like: [{"data": {...}}, {"data": {...}}]
+     */
+    @lombok.Data
+    private static class VehicleMakeWrapper {
+        private VehicleMakeResponse.VehicleMakeData data;
+    }
+
+    /**
+     * Wrapper class for Carbon Interface API vehicle models response
+     * The API returns an array like: [{"data": {...}}, {"data": {...}}]
+     */
+    @lombok.Data
+    private static class VehicleModelWrapper {
+        private VehicleModelResponse.VehicleModelData data;
     }
 }

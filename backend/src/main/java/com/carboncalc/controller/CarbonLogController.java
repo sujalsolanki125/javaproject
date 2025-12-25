@@ -8,6 +8,7 @@ import com.carboncalc.repository.UserRepository;
 import com.carboncalc.service.CarbonCalcService;
 import com.carboncalc.service.DashboardService;
 import com.carboncalc.service.LeaderboardService;
+import com.carboncalc.client.CarbonInterfaceClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,9 @@ public class CarbonLogController {
     @Autowired
     private LeaderboardService leaderboardService;
 
+    @Autowired
+    private CarbonInterfaceClient carbonInterfaceClient;
+
     @PostMapping
     public ResponseEntity<CarbonLog> createLog(@RequestBody CarbonLog log, Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
@@ -59,66 +63,160 @@ public class CarbonLogController {
             Principal principal) {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        Map<String, Object> survey = surveyData.getSurveyData();
 
-        // Create carbon logs for each category
-        Map<String, Double> breakdown = surveyData.getBreakdown();
+        double transportEmission = 0.0;
+        double energyEmission = 0.0;
+        double flightEmission = 0.0;
+        Map<String, Object> vehicleInfoData = null;
 
-        // Transportation log
-        if (breakdown.containsKey("transportation") && breakdown.get("transportation") > 0) {
+        // Transport via Carbon Interface (vehicle estimates)
+        try {
+            Object transportMode = survey.get("transportMode");
+            Object commuteDistance = survey.get("commuteDistance"); // km
+            Object vehicleInfo = survey.get("vehicleInfo");
+
+            if (transportMode != null && vehicleInfo instanceof Map<?, ?> && commuteDistance != null) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> vehicle = (Map<String, Object>) vehicleInfo;
+                vehicleInfoData = vehicle; // store for later use
+                String modelId = vehicle.get("modelId") != null ? vehicle.get("modelId").toString() : null;
+                if (modelId != null && !modelId.isBlank()) {
+                    double km = Double.parseDouble(commuteDistance.toString());
+                    double miles = km * 0.621371; // convert to miles for Carbon Interface
+                    Double ciTransport = carbonInterfaceClient.estimateVehicleEmissions(miles, modelId);
+                    transportEmission = ciTransport != null ? ciTransport : 0.0;
+                }
+            }
+        } catch (Exception e) {
+            // keep transportEmission = 0 on failure
+        }
+
+        // Electricity via Carbon Interface
+        try {
+            Object kwh = survey.get("electricityUsage");
+            Object country = survey.get("countryCode");
+            Object state = survey.get("stateCode");
+            if (kwh != null && country != null) {
+                Double ciEnergy = carbonInterfaceClient.estimateElectricityEmissions(
+                        Double.parseDouble(kwh.toString()),
+                        country.toString(),
+                        state != null ? state.toString() : null);
+                energyEmission = ciEnergy != null ? ciEnergy : 0.0;
+            }
+        } catch (Exception e) {
+            // keep energyEmission = 0 on failure
+        }
+
+        // Flights via Carbon Interface (optional; uses simple estimate if legs not
+        // provided)
+        try {
+            Object shortFlights = survey.get("shortHaulFlights");
+            Object longFlights = survey.get("longHaulFlights");
+            int passengers = 1;
+            int shortCount = shortFlights != null ? Integer.parseInt(shortFlights.toString()) : 0;
+            int longCount = longFlights != null ? Integer.parseInt(longFlights.toString()) : 0;
+            // Approximate using Carbon Interface simple flight method with placeholder legs
+            if (shortCount > 0) {
+                flightEmission += carbonInterfaceClient.estimateFlightEmissions(500.0 * shortCount, passengers) != null
+                        ? carbonInterfaceClient.estimateFlightEmissions(500.0 * shortCount, passengers)
+                        : 0.0;
+            }
+            if (longCount > 0) {
+                flightEmission += carbonInterfaceClient.estimateFlightEmissions(2500.0 * longCount, passengers) != null
+                        ? carbonInterfaceClient.estimateFlightEmissions(2500.0 * longCount, passengers)
+                        : 0.0;
+            }
+        } catch (Exception e) {
+            // keep flightEmission = 0 on failure
+        }
+
+        double totalEmissions = Math.max(0.0, transportEmission + energyEmission + flightEmission);
+
+        // Persist logs only for computed categories
+        if (transportEmission > 0) {
             CarbonLog transportLog = new CarbonLog();
             transportLog.setUser(user);
             transportLog.setCategory("transportation");
-            transportLog.setActivity("Survey - Daily commute and travel");
-            transportLog.setCarbonEmission(breakdown.get("transportation"));
+            transportLog.setActivity("Survey - Daily commute (Carbon Interface)");
+            transportLog.setCarbonEmission(transportEmission);
             transportLog.setLogDate(LocalDate.now());
-            transportLog.setDescription("From carbon footprint survey");
+            transportLog.setDescription("Computed via Carbon Interface");
+            transportLog.setApiSource("carbon_interface");
+            transportLog.setApiCalculatedAt(LocalDateTime.now());
+
+            // Store vehicle information if available
+            if (vehicleInfoData != null) {
+                transportLog.setVehicleModelId(
+                        vehicleInfoData.get("modelId") != null ? vehicleInfoData.get("modelId").toString() : null);
+                transportLog.setVehicleMake(
+                        vehicleInfoData.get("make") != null ? vehicleInfoData.get("make").toString() : null);
+                transportLog.setVehicleModel(
+                        vehicleInfoData.get("model") != null ? vehicleInfoData.get("model").toString() : null);
+                Object year = vehicleInfoData.get("year");
+                if (year != null) {
+                    try {
+                        transportLog.setVehicleYear(Integer.parseInt(year.toString()));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
             carbonLogRepository.save(transportLog);
         }
 
-        // Diet log
-        if (breakdown.containsKey("diet") && breakdown.get("diet") > 0) {
-            CarbonLog dietLog = new CarbonLog();
-            dietLog.setUser(user);
-            dietLog.setCategory("food");
-            dietLog.setActivity("Survey - Diet type");
-            dietLog.setCarbonEmission(breakdown.get("diet"));
-            dietLog.setLogDate(LocalDate.now());
-            dietLog.setDescription("From carbon footprint survey");
-            carbonLogRepository.save(dietLog);
-        }
-
-        // Energy log
-        if (breakdown.containsKey("energy") && breakdown.get("energy") > 0) {
+        if (energyEmission > 0) {
             CarbonLog energyLog = new CarbonLog();
             energyLog.setUser(user);
             energyLog.setCategory("energy");
-            energyLog.setActivity("Survey - Home energy usage");
-            energyLog.setCarbonEmission(breakdown.get("energy"));
+            energyLog.setActivity("Survey - Electricity (Carbon Interface)");
+            energyLog.setCarbonEmission(energyEmission);
             energyLog.setLogDate(LocalDate.now());
-            energyLog.setDescription("From carbon footprint survey");
+            energyLog.setDescription("Computed via Carbon Interface");
+            energyLog.setApiSource("carbon_interface");
+            energyLog.setApiCalculatedAt(LocalDateTime.now());
+
+            // Store electricity and location details
+            try {
+                Object unit = survey.get("electricityUnit");
+                Object country = survey.get("countryCode");
+                Object state = survey.get("stateCode");
+
+                if (unit != null)
+                    energyLog.setElectricityUnit(unit.toString());
+                if (country != null)
+                    energyLog.setCountryCode(country.toString());
+                if (state != null)
+                    energyLog.setStateCode(state.toString());
+            } catch (Exception ignored) {
+            }
+
             carbonLogRepository.save(energyLog);
         }
 
-        // Lifestyle log (if negative, it's a reduction)
-        if (breakdown.containsKey("lifestyle")) {
-            CarbonLog lifestyleLog = new CarbonLog();
-            lifestyleLog.setUser(user);
-            lifestyleLog.setCategory("waste");
-            lifestyleLog.setActivity("Survey - Eco-friendly habits");
-            lifestyleLog.setCarbonEmission(breakdown.get("lifestyle"));
-            lifestyleLog.setLogDate(LocalDate.now());
-            lifestyleLog.setDescription("Carbon reduction from eco-friendly habits");
-            carbonLogRepository.save(lifestyleLog);
+        if (flightEmission > 0) {
+            CarbonLog flightLog = new CarbonLog();
+            flightLog.setUser(user);
+            flightLog.setCategory("transportation");
+            flightLog.setActivity("Survey - Flights (Carbon Interface)");
+            flightLog.setCarbonEmission(flightEmission);
+            flightLog.setLogDate(LocalDate.now());
+            flightLog.setDescription("Computed via Carbon Interface");
+            flightLog.setApiSource("carbon_interface");
+            flightLog.setApiCalculatedAt(LocalDateTime.now());
+            carbonLogRepository.save(flightLog);
         }
 
         // Update leaderboard with total emissions
-        leaderboardService.updateLeaderboard(user.getId(), surveyData.getTotalEmissions(),
-                (int) (surveyData.getTotalEmissions() * 10));
+        leaderboardService.updateLeaderboard(user.getId(), totalEmissions,
+                (int) (totalEmissions * 10));
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Survey submitted successfully",
-                "totalEmissions", surveyData.getTotalEmissions()));
+                "message", "Survey submitted via Carbon Interface",
+                "totalEmissions", totalEmissions,
+                "transportEmission", transportEmission,
+                "energyEmission", energyEmission,
+                "flightEmission", flightEmission));
     }
 
     @GetMapping("/dashboard-stats")
@@ -148,6 +246,35 @@ public class CarbonLogController {
     public ResponseEntity<?> deleteLog(@PathVariable Long id) {
         carbonLogRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CarbonLog> updateLog(@PathVariable Long id,
+            @RequestBody CarbonLog updated,
+            Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        CarbonLog existing = carbonLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Log not found"));
+
+        // Ensure the log belongs to the authenticated user
+        if (!existing.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        existing.setCategory(updated.getCategory());
+        existing.setActivity(updated.getActivity());
+        existing.setAmount(updated.getAmount());
+        existing.setDescription(updated.getDescription());
+        existing.setLogDate(updated.getLogDate());
+
+        // Recalculate emission based on updated fields
+        Double emission = carbonCalcService.calculateActivityEmission(
+                existing.getCategory(), existing.getActivity(), existing.getAmount());
+        existing.setCarbonEmission(emission);
+
+        return ResponseEntity.ok(carbonLogRepository.save(existing));
     }
 
     @GetMapping("/total")
@@ -183,5 +310,18 @@ public class CarbonLogController {
         }
 
         return ResponseEntity.ok(trendData);
+    }
+
+    @GetMapping("/range")
+    public ResponseEntity<List<CarbonLog>> getLogsByDateRange(@RequestParam String startDate,
+            @RequestParam String endDate,
+            Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        List<CarbonLog> logs = carbonLogRepository.findByUserIdAndLogDateBetween(user.getId(), start, end);
+        return ResponseEntity.ok(logs);
     }
 }
