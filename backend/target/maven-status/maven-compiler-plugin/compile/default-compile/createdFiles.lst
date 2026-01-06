@@ -9,7 +9,6 @@ com\carboncalc\service\SurveyService.class
 com\carboncalc\entity\AdminOrderLineItem$ItemFulfillmentStatus.class
 com\carboncalc\service\VehicleLookupService$VehicleInfo.class
 com\carboncalc\entity\AdminUserProfile$UserProfileStatus.class
-com\carboncalc\controller\CarbonLogController.class
 com\carboncalc\service\CartService.class
 com\carboncalc\config\JwtFilter.class
 com\carboncalc\dto\carbon\CarbonEstimateResponse$EstimateData.class
@@ -37,6 +36,7 @@ com\carboncalc\dto\carbon\VehicleModelResponse.class
 com\carboncalc\entity\AdminUserProfile$UserAccountRoleType.class
 com\carboncalc\controller\AdminUserController.class
 com\carboncalc\config\SecurityConfigEnhanced.class
+com\carboncalc\client\CarbonInterfaceClient$VehicleModelWrapper.class
 com\carboncalc\controller\CarbonInterfaceController.class
 com\carboncalc\dto\OtpVerificationRequest.class
 com\carboncalc\controller\UserController.class
@@ -82,6 +82,7 @@ com\carboncalc\config\RedisConfig.class
 com\carboncalc\entity\CarbonLog.class
 com\carboncalc\entity\PasswordResetOtp.class
 com\carboncalc\config\CacheConfig.class
+com\carboncalc\client\CarbonInterfaceClient$VehicleMakeWrapper.class
 com\carboncalc\service\EventPublisher.class
 com\carboncalc\event\UserNotificationEvent.class
 com\carboncalc\entity\AdminProductCatalog$ProductCatalogStatus.class
@@ -97,6 +98,7 @@ com\carboncalc\entity\MarketplaceItem.class
 com\carboncalc\client\OpenEnergyDataClient.class
 com\carboncalc\controller\TransactionsController.class
 com\carboncalc\service\AnalyticsService.class
+com\carboncalc\client\ClimatiqClient.class
 com\carboncalc\entity\VehicleCache.class
 com\carboncalc\repository\AdminOrderLineItemRepository.class
 com\carboncalc\dto\NewPasswordRequest.class
@@ -113,6 +115,7 @@ com\carboncalc\entity\AdminOrderLineItem.class
 com\carboncalc\service\MarketplaceService.class
 com\carboncalc\dto\DashboardStatsDTO.class
 com\carboncalc\entity\Survey.class
+com\carboncalc\controller\ClimatiqTestController.class
 com\carboncalc\service\EventConsumer.class
 com\carboncalc\entity\Transaction.class
 com\carboncalc\dto\BadgeDTO.class

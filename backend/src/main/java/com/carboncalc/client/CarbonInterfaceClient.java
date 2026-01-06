@@ -156,7 +156,8 @@ public class CarbonInterfaceClient {
         try {
             log.info("Fetching vehicle makes from Carbon Interface API");
 
-            // Carbon Interface returns an array of wrapper objects, each containing a "data" field
+            // Carbon Interface returns an array of wrapper objects, each containing a
+            // "data" field
             VehicleMakeWrapper[] responseArray = webClient.get()
                     .uri(baseUrl + "/vehicle_makes")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
@@ -177,15 +178,76 @@ public class CarbonInterfaceClient {
                 return makes;
             }
 
-            log.warn("No vehicle makes data returned from Carbon Interface API");
-            return List.of();
+            log.warn("No vehicle makes data returned from Carbon Interface API, using mock data");
+            return getMockVehicleMakes();
         } catch (WebClientResponseException e) {
-            log.error("HTTP error fetching vehicle makes: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
-            return List.of();
+            log.error("HTTP error fetching vehicle makes: {} - {}. Using mock data as fallback.", e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            return getMockVehicleMakes();
         } catch (Exception e) {
-            log.error("Error fetching vehicle makes: {}", e.getMessage());
-            return List.of();
+            log.error("Error fetching vehicle makes: {}. Using mock data as fallback.", e.getMessage());
+            return getMockVehicleMakes();
         }
+    }
+
+    /**
+     * Provides mock vehicle makes data as fallback when API is unavailable
+     */
+    private List<VehicleMakeResponse.VehicleMakeData> getMockVehicleMakes() {
+        log.info("Returning mock vehicle makes data");
+        List<VehicleMakeResponse.VehicleMakeData> mockMakes = new ArrayList<>();
+
+        // Toyota
+        VehicleMakeResponse.VehicleMakeData toyota = new VehicleMakeResponse.VehicleMakeData();
+        toyota.setId("mock-toyota");
+        toyota.setType("vehicle_make");
+        VehicleMakeResponse.VehicleMakeAttributes toyotaAttr = new VehicleMakeResponse.VehicleMakeAttributes();
+        toyotaAttr.setName("Toyota");
+        toyotaAttr.setNumberOfModels(50);
+        toyota.setAttributes(toyotaAttr);
+        mockMakes.add(toyota);
+
+        // Honda
+        VehicleMakeResponse.VehicleMakeData honda = new VehicleMakeResponse.VehicleMakeData();
+        honda.setId("mock-honda");
+        honda.setType("vehicle_make");
+        VehicleMakeResponse.VehicleMakeAttributes hondaAttr = new VehicleMakeResponse.VehicleMakeAttributes();
+        hondaAttr.setName("Honda");
+        hondaAttr.setNumberOfModels(40);
+        honda.setAttributes(hondaAttr);
+        mockMakes.add(honda);
+
+        // Ford
+        VehicleMakeResponse.VehicleMakeData ford = new VehicleMakeResponse.VehicleMakeData();
+        ford.setId("mock-ford");
+        ford.setType("vehicle_make");
+        VehicleMakeResponse.VehicleMakeAttributes fordAttr = new VehicleMakeResponse.VehicleMakeAttributes();
+        fordAttr.setName("Ford");
+        fordAttr.setNumberOfModels(45);
+        ford.setAttributes(fordAttr);
+        mockMakes.add(ford);
+
+        // Chevrolet
+        VehicleMakeResponse.VehicleMakeData chevy = new VehicleMakeResponse.VehicleMakeData();
+        chevy.setId("mock-chevrolet");
+        chevy.setType("vehicle_make");
+        VehicleMakeResponse.VehicleMakeAttributes chevyAttr = new VehicleMakeResponse.VehicleMakeAttributes();
+        chevyAttr.setName("Chevrolet");
+        chevyAttr.setNumberOfModels(42);
+        chevy.setAttributes(chevyAttr);
+        mockMakes.add(chevy);
+
+        // Tesla
+        VehicleMakeResponse.VehicleMakeData tesla = new VehicleMakeResponse.VehicleMakeData();
+        tesla.setId("mock-tesla");
+        tesla.setType("vehicle_make");
+        VehicleMakeResponse.VehicleMakeAttributes teslaAttr = new VehicleMakeResponse.VehicleMakeAttributes();
+        teslaAttr.setName("Tesla");
+        teslaAttr.setNumberOfModels(5);
+        tesla.setAttributes(teslaAttr);
+        mockMakes.add(tesla);
+
+        return mockMakes;
     }
 
     /**
@@ -199,7 +261,8 @@ public class CarbonInterfaceClient {
         try {
             log.info("Fetching vehicle models for make ID: {}", vehicleMakeId);
 
-            // Carbon Interface returns an array of wrapper objects, each containing a "data" field
+            // Carbon Interface returns an array of wrapper objects, each containing a
+            // "data" field
             VehicleModelWrapper[] responseArray = webClient.get()
                     .uri(baseUrl + "/vehicle_makes/" + vehicleMakeId + "/vehicle_models")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
@@ -222,14 +285,79 @@ public class CarbonInterfaceClient {
             }
 
             log.warn("No vehicle models data returned from Carbon Interface API for make ID: {}", vehicleMakeId);
-            return List.of();
+            return getMockVehicleModels(vehicleMakeId);
         } catch (WebClientResponseException e) {
-            log.error("HTTP error fetching vehicle models for make {}: {} - {}", vehicleMakeId, e.getStatusCode(),
+            log.error("HTTP error fetching vehicle models for make {}: {} - {}. Using mock data.", vehicleMakeId,
+                    e.getStatusCode(),
                     e.getResponseBodyAsString());
-            return List.of();
+            return getMockVehicleModels(vehicleMakeId);
         } catch (Exception e) {
-            log.error("Error fetching vehicle models for make {}: {}", vehicleMakeId, e.getMessage());
-            return List.of();
+            log.error("Error fetching vehicle models for make {}: {}. Using mock data.", vehicleMakeId, e.getMessage());
+            return getMockVehicleModels(vehicleMakeId);
+        }
+    }
+
+    /**
+     * Provides mock vehicle models data as fallback when API is unavailable
+     */
+    private List<VehicleModelResponse.VehicleModelData> getMockVehicleModels(String makeId) {
+        log.info("Returning mock vehicle models for make ID: {}", makeId);
+        List<VehicleModelResponse.VehicleModelData> mockModels = new ArrayList<>();
+
+        String makeName = getMakeNameFromId(makeId);
+
+        // Add common models for each make
+        String[] modelNames = getModelNamesForMake(makeName);
+        int[] years = { 2020, 2021, 2022, 2023, 2024 };
+
+        int idCounter = 1;
+        for (String modelName : modelNames) {
+            for (int year : years) {
+                VehicleModelResponse.VehicleModelData model = new VehicleModelResponse.VehicleModelData();
+                model.setId("mock-model-" + idCounter++);
+                model.setType("vehicle_model");
+                VehicleModelResponse.VehicleModelAttributes attr = new VehicleModelResponse.VehicleModelAttributes();
+                attr.setName(modelName);
+                attr.setYear(year);
+                attr.setVehicleMake(makeName);
+                model.setAttributes(attr);
+                mockModels.add(model);
+            }
+        }
+
+        return mockModels;
+    }
+
+    private String getMakeNameFromId(String makeId) {
+        if (makeId == null)
+            return "Generic";
+        if (makeId.contains("toyota"))
+            return "Toyota";
+        if (makeId.contains("honda"))
+            return "Honda";
+        if (makeId.contains("ford"))
+            return "Ford";
+        if (makeId.contains("chevrolet"))
+            return "Chevrolet";
+        if (makeId.contains("tesla"))
+            return "Tesla";
+        return "Generic";
+    }
+
+    private String[] getModelNamesForMake(String makeName) {
+        switch (makeName.toLowerCase()) {
+            case "toyota":
+                return new String[] { "Camry", "Corolla", "RAV4", "Highlander" };
+            case "honda":
+                return new String[] { "Civic", "Accord", "CR-V", "Pilot" };
+            case "ford":
+                return new String[] { "F-150", "Escape", "Explorer", "Mustang" };
+            case "chevrolet":
+                return new String[] { "Silverado", "Equinox", "Malibu", "Tahoe" };
+            case "tesla":
+                return new String[] { "Model 3", "Model Y", "Model S", "Model X" };
+            default:
+                return new String[] { "Sedan", "SUV", "Truck" };
         }
     }
 

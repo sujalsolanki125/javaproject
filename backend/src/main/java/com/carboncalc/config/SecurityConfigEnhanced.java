@@ -44,6 +44,10 @@ public class SecurityConfigEnhanced {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/cart/**").permitAll()
                         // Public read-only catalog endpoints
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**").permitAll()
+                        // Climatiq API test endpoints - public for testing
+                        .requestMatchers("/api/climatiq/**").permitAll()
+                        // Carbon Interface API test endpoint - public for debugging
+                        .requestMatchers("/api/carbon-interface/auth/test").permitAll()
                         // Carbon Interface API - authenticated users only (for survey)
                         .requestMatchers("/api/carbon-interface/**").authenticated()
                         // Protected endpoints - Admin only
@@ -60,7 +64,13 @@ public class SecurityConfigEnhanced {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+
+        // Allow origins from environment variable or defaults
+        String allowedOrigins = System.getenv().getOrDefault(
+                "ALLOWED_ORIGINS",
+                "http://localhost:3000,http://localhost:5173");
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

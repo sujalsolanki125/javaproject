@@ -1,5 +1,6 @@
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\CarbonCalcApplication.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\client\CarbonInterfaceClient.java
+D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\client\ClimatiqClient.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\client\OpenEnergyDataClient.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\client\UNCarbonEmissionsClient.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\config\CacheConfig.java
@@ -19,6 +20,7 @@ D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\C
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\CarbonLogController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\CartController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\CatalogController.java
+D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\ClimatiqTestController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\GoalsController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\LeaderboardController.java
 D:\infosys Project\carbon-calc\backend\src\main\java\com\carboncalc\controller\MarketplaceController.java

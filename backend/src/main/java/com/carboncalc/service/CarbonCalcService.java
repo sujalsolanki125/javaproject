@@ -1,6 +1,7 @@
 package com.carboncalc.service;
 
 import com.carboncalc.client.CarbonInterfaceClient;
+import com.carboncalc.client.ClimatiqClient;
 import com.carboncalc.service.VehicleLookupService;
 import com.carboncalc.entity.Survey;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 /**
  * Carbon Calculation Service - The Brain of Carbon Calculations
  * 
- * This service integrates with Carbon Interface API to provide:
+ * This service integrates with Climatiq API to provide:
  * 1. Accurate CO₂ emissions for real-world activities
  * 2. Scientific, verified carbon data (not guessed numbers)
  * 3. Personalized results based on user activities
@@ -22,22 +23,23 @@ import org.springframework.stereotype.Service;
 public class CarbonCalcService {
 
     private final CarbonInterfaceClient carbonInterfaceClient;
+    private final ClimatiqClient climatiqClient;
     private final VehicleLookupService vehicleLookupService;
 
     /**
      * Calculate total carbon footprint from survey data
-     * Uses Carbon Interface API for accurate calculations
+     * Uses Climatiq API for accurate calculations
      */
     public Double calculateTotalFootprint(Survey survey) {
-        log.info("Calculating total footprint for survey using Carbon Interface API");
+        log.info("Calculating total footprint for survey using Climatiq API");
         Double total = 0.0;
 
-        // Transportation emissions (Carbon Interface API)
+        // Transportation emissions (Climatiq API)
         if (survey.getTransportation() != null) {
             total += calculateTransportationFootprint(survey.getTransportation());
         }
 
-        // Housing/Energy emissions (Carbon Interface API)
+        // Housing/Energy emissions (Climatiq API)
         if (survey.getHousing() != null) {
             total += calculateHousingFootprint(survey.getHousing());
         }
@@ -60,7 +62,7 @@ public class CarbonCalcService {
     private Double calculateTransportationFootprint(String data) {
         /**
          * Transportation Emissions Calculation
-         * Uses Carbon Interface API for accuracy
+         * Uses Climatiq API for accuracy
          * 
          * Example inputs from survey:
          * - Car: 50 miles/day, petrol
@@ -71,21 +73,18 @@ public class CarbonCalcService {
             // Parse transportation data (assuming JSON format from frontend)
             // In real implementation, parse user's actual input
 
-            // Example: Calculate car emissions using Carbon Interface API
+            // Example: Calculate car emissions using Climatiq API
             Double carMiles = 50.0; // Extract from data
-            String vehicleDescription = "Toyota Camry"; // Extract from survey data
+            String vehicleType = "car"; // Extract from survey data
 
-            // Parse vehicle information and get model ID
-            VehicleLookupService.VehicleInfo vehicleInfo = vehicleLookupService
-                    .parseVehicleDescription(vehicleDescription);
-            String vehicleModelId = vehicleLookupService.findVehicleModelId(vehicleInfo.make, vehicleInfo.model,
-                    vehicleInfo.year);
+            // Convert miles to kilometers
+            Double carKm = carMiles * 1.60934 * 30; // Monthly distance
 
-            // Call Carbon Interface API for accurate calculation
-            Double carEmissions = carbonInterfaceClient.estimateVehicleEmissions(carMiles * 30, vehicleModelId);
+            // Call Climatiq API for accurate calculation
+            Double carEmissions = climatiqClient.calculateVehicleEmissions(carKm, vehicleType);
 
-            if (carEmissions != null) {
-                log.info("Car emissions calculated via Carbon Interface API: {} kg CO₂", carEmissions);
+            if (carEmissions != null && carEmissions > 0) {
+                log.info("Car emissions calculated via Climatiq API: {} kg CO₂", carEmissions);
                 return carEmissions;
             }
 
@@ -103,7 +102,7 @@ public class CarbonCalcService {
     private Double calculateHousingFootprint(String data) {
         /**
          * Housing/Energy Emissions Calculation
-         * Uses Carbon Interface API for electricity calculations
+         * Uses Climatiq API for electricity calculations
          * 
          * Example inputs:
          * - Electricity: 900 kWh/month
@@ -113,15 +112,13 @@ public class CarbonCalcService {
         try {
             // Parse housing data
             Double electricityKwh = 900.0; // Extract from data
-            String country = "us"; // Extract from data
-            String state = null; // Extract from data if available (e.g., "ca", "fl")
+            String country = "US"; // Extract from data
 
-            // Call Carbon Interface API for accurate electricity emissions
-            Double electricityEmissions = carbonInterfaceClient.estimateElectricityEmissions(electricityKwh, country,
-                    state);
+            // Call Climatiq API for accurate electricity emissions
+            Double electricityEmissions = climatiqClient.calculateElectricityEmissions(electricityKwh, country);
 
-            if (electricityEmissions != null) {
-                log.info("Electricity emissions via Carbon Interface API: {} kg CO₂", electricityEmissions);
+            if (electricityEmissions != null && electricityEmissions > 0) {
+                log.info("Electricity emissions via Climatiq API: {} kg CO₂", electricityEmissions);
 
                 // Add natural gas emissions (verified factor)
                 Double gasEmissions = 40.0 * 5.3; // 40 therms × 5.3 kg CO₂ per therm

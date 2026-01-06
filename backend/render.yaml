@@ -1,0 +1,63 @@
+services:
+  # Backend Spring Boot Application
+  - type: web
+    name: carbon-calc-backend
+    runtime: java
+    plan: free  # Change to 'starter' or 'standard' for production
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar -Dserver.port=$PORT -Dspring.profiles.active=prod target/carbon-calculator-1.0.0.jar"
+    healthCheckPath: /actuator/health
+    env: java
+    envVars:
+      - key: JAVA_VERSION
+        value: 21
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        fromDatabase:
+          name: carbon-calc-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: carbon-calc-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: carbon-calc-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: carbon-calc-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: carbon-calc-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+        sync: false
+      - key: JWT_EXPIRATION
+        value: 3600000
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: CARBON_INTERFACE_API_KEY
+        sync: false
+      - key: CLIMATIQ_API_KEY
+        sync: false
+      - key: DEFAULT_COUNTRY
+        value: US
+      - key: DEFAULT_STATE
+        value: CA
+
+databases:
+  # MySQL Database
+  - name: carbon-calc-db
+    databaseName: carboncalc
+    plan: free  # Change to 'starter' or 'standard' for production
+    user: carboncalc_user
