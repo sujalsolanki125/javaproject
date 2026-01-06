@@ -9,6 +9,9 @@ spring:
   main:
     allow-circular-references: false
   
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  
   # Email Configuration - Use environment variables only
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -133,10 +136,6 @@ server:
   http2:
     enabled: true
   shutdown: graceful
-  
-spring:
-  lifecycle:
-    timeout-per-shutdown-phase: 30s
 
 logging:
   level:
