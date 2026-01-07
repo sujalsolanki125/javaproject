@@ -3,6 +3,7 @@ package com.carboncalc.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -24,11 +25,13 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfigEnhanced {
 
-    @Autowired
-    private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    @Autowired
-    private RateLimitFilter rateLimitFilter;
+    public SecurityConfigEnhanced(@Lazy JwtFilter jwtFilter, RateLimitFilter rateLimitFilter) {
+        this.jwtFilter = jwtFilter;
+        this.rateLimitFilter = rateLimitFilter;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
