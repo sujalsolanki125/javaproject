@@ -7,7 +7,7 @@ spring:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
   
   main:
-    allow-circular-references: false
+    allow-circular-references: true
   
   lifecycle:
     timeout-per-shutdown-phase: 30s
