@@ -18,7 +18,7 @@ import java.util.Map;
  * API Docs: https://www.climatiq.io/docs
  */
 @Slf4j
-@Service
+// @Service - Disabled: Using local calculations instead of API
 @RequiredArgsConstructor
 public class ClimatiqClient {
 

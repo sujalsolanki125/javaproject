@@ -17,7 +17,7 @@ import java.util.Map;
  * API: https://api.carbonintensity.org.uk/ (UK example)
  */
 @Slf4j
-@Service
+// @Service - Disabled: Using local calculations instead of API
 @RequiredArgsConstructor
 public class OpenEnergyDataClient {
 

@@ -25,7 +25,7 @@ import java.util.Map;
  * API Docs: https://docs.carboninterface.com/
  */
 @Slf4j
-@Service
+// @Service - Disabled: Using local calculations instead of API
 @RequiredArgsConstructor
 public class CarbonInterfaceClient {
 

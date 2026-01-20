@@ -17,7 +17,7 @@ import java.util.Map;
  * API: https://data.un.org/
  */
 @Slf4j
-@Service
+// @Service - Disabled: Using local calculations instead of API
 @RequiredArgsConstructor
 public class UNCarbonEmissionsClient {
 
