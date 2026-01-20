@@ -5,7 +5,7 @@ services:
     runtime: java
     plan: free  # Change to 'starter' or 'standard' for production
     buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar -Dserver.port=$PORT -Dspring.profiles.active=prod target/carbon-calculator-1.0.0.jar"
+    startCommand: "java -jar -Dserver.port=$PORT -Dserver.address=0.0.0.0 -Dspring.profiles.active=prod target/carbon-calculator-1.0.0.jar"
     healthCheckPath: /actuator/health
     env: java
     envVars:
