@@ -9,6 +9,7 @@ com\carboncalc\service\SurveyService.class
 com\carboncalc\entity\AdminOrderLineItem$ItemFulfillmentStatus.class
 com\carboncalc\service\VehicleLookupService$VehicleInfo.class
 com\carboncalc\entity\AdminUserProfile$UserProfileStatus.class
+com\carboncalc\controller\CarbonLogController.class
 com\carboncalc\service\CartService.class
 com\carboncalc\config\JwtFilter.class
 com\carboncalc\dto\carbon\CarbonEstimateResponse$EstimateData.class
